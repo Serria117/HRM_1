@@ -1,19 +1,36 @@
 package com.hrm.security;
 
 import com.hrm.entities.AppUser;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor @NoArgsConstructor
+@Getter @Setter @Accessors(chain = true)
 public class AppUserDetails implements UserDetails
 {
     AppUser currentUser;
+    UUID userId;
+
+    public AppUserDetails(AppUser user){
+        this.currentUser = user;
+        this.userId = user.getId();
+    }
+
+    public AppUserDetails setUserId(){
+        this.userId = this.currentUser.getId();
+        return this;
+    }
+
+    public UUID getUserId(){
+        return this.userId;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()

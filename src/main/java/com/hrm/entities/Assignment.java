@@ -7,8 +7,8 @@ import javax.persistence.*;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Getter @Setter @Entity @Table(name = "task_management")
-public class TaskManagement
+@Getter @Setter @Entity @Table(name = "assignment")
+public class Assignment extends BaseEntity
 {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -20,6 +20,9 @@ public class TaskManagement
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "task_user",
             joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "app_id"))
-    private Set<AppUser> appUsers = new LinkedHashSet<>();
+            inverseJoinColumns = @JoinColumn(name = "assign_by_id"))
+    private Set<AppUser> assignTo = new LinkedHashSet<>();
+
+    @ManyToOne @JoinColumn(name = "assign_by_id")
+    private AppUser assignBy;
 }

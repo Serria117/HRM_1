@@ -16,8 +16,7 @@ public class AppUserDetailsService implements UserDetailsService
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
     {
         var foundUser = userRepository.findByUsername(username);
-        if(foundUser == null) throw new UsernameNotFoundException("Username does not exist");
-
+        if ( foundUser == null ) throw new UsernameNotFoundException("Username does not exist");
         return new AppUserDetails(foundUser);
     }
 }

@@ -5,6 +5,7 @@ import com.hrm.payload.BaseResponse;
 import com.hrm.payload.userdto.*;
 import com.hrm.repositories.RoleRepository;
 import com.hrm.repositories.UserRepository;
+import com.hrm.security.AppUserDetails;
 import com.hrm.security.JWTProvider;
 import com.hrm.services.contract.AppUserService;
 import com.hrm.services.contract.EmailService;
@@ -49,6 +50,7 @@ public class AppUserServiceImpl implements AppUserService
                                   .setRoles(new HashSet<>(roles))
                                   .setPassword(passwordEncoder.encode(signUpDto.getPassword()));
             var res = userRepository.save(newUser);
+            log.info("User created");
             return BaseResponse.success(res);
         }
         catch ( Exception e ) {
@@ -180,11 +182,12 @@ public class AppUserServiceImpl implements AppUserService
                             signInDto.getUsername(),
                             signInDto.getPassword()));
             if ( auth.isAuthenticated() ) {
-                var userDetails = userDetailsService.loadUserByUsername(signInDto.getUsername());
+                var userDetails = (AppUserDetails) userDetailsService.loadUserByUsername(signInDto.getUsername());
                 var token = JWTProvider.createToken(userDetails);
                 var refreshToken = createRefreshToken();
                 updateRefreshToken(signInDto.getUsername(), refreshToken);
                 return new TokenResponse().setUsername(signInDto.getUsername())
+                                          .setUserId(userDetails.getUserId())
                                           .setAccessToken(token)
                                           .setRefreshToken(refreshToken.getToken())
                                           .setExpiration(JWTProvider.getExpiration(token))
