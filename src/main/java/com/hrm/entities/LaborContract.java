@@ -18,4 +18,7 @@ public class LaborContract extends BaseEntity
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer contractTypeId;
+    @ManyToOne @JoinColumn(name = "user_id")
+    private AppUser user;
+    private Double basicSalary;
 }

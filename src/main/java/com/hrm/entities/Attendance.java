@@ -16,8 +16,6 @@ public class Attendance extends BaseEntity implements Serializable
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Boolean isActivated = false;
-    private Boolean isDeleted = false;
     private LocalDate attendantDate;
     private Instant checkInTime;
     private Instant checkOutTime;

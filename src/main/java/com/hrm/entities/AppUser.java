@@ -3,6 +3,7 @@ package com.hrm.entities;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -11,6 +12,7 @@ import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,6 +40,7 @@ public class AppUser extends BaseEntity implements Serializable
     @Size(min = 3, max = 10)
     String bankShortName;
 
+    Byte biometricData;
     String refreshToken;
     LocalDateTime refreshTokenExpiration;
     LocalDateTime lastLoginTime;
@@ -51,4 +54,19 @@ public class AppUser extends BaseEntity implements Serializable
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<AppRole> roles = new LinkedHashSet<>();
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if ( this == o ) return true;
+        if ( o == null || Hibernate.getClass(this) != Hibernate.getClass(o) ) return false;
+        AppUser appUser = (AppUser) o;
+        return id != null && Objects.equals(id, appUser.id);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return getClass().hashCode();
+    }
 }

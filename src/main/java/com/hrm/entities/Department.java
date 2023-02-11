@@ -17,7 +17,6 @@ public class Department extends BaseEntity
     private String departmentName;
     @Size(max = 10)
     private String departmentCode;
-
     @OneToOne @JoinColumn(name = "mng_user_id")
     private AppUser managementUser;
 }
