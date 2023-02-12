@@ -2,6 +2,8 @@ package com.hrm;
 
 import com.hrm.configurations.SwaggerConfig;
 import com.hrm.entities.AppRole;
+import com.hrm.entities.ContractType;
+import com.hrm.repositories.ContractTypeRepository;
 import com.hrm.repositories.RoleRepository;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
@@ -35,14 +37,22 @@ public class HrmApplication
     }
 
     @Bean
-    CommandLineRunner commandLineRunner(RoleRepository roleRepository)
+    CommandLineRunner commandLineRunner(RoleRepository roleRepository,
+                                        ContractTypeRepository contractTypeRepository)
     {
         String[] roleToCreate = {
                 "ROLE_SYSADMIN",
                 "ROLE_HR",
                 "ROLE_EMPLOYEE"};
         var roles = new ArrayList<AppRole>();
+
+        String[] contractTypeToCreate = {
+          "Internship", "Partnership", "Fixed-term contract", "Indefinite contract"
+        };
+        var contractTypes = new ArrayList<ContractType>();
+
         return args -> {
+            //Seed some roles:
             for ( var role : roleToCreate ) {
                 if ( !roleRepository.existByName(role) ) {
                     roles.add(new AppRole().setRoleName(role));
@@ -50,6 +60,15 @@ public class HrmApplication
             }
             if(!roles.isEmpty()) {
                 roleRepository.saveAll(roles);
+            }
+            //Seed some contract types:
+            for(var type : contractTypeToCreate){
+                if( !contractTypeRepository.existByName(type) ){
+                    contractTypes.add(new ContractType().setTypeName(type));
+                }
+            }
+            if(!contractTypes.isEmpty()){
+                contractTypeRepository.saveAll(contractTypes);
             }
         };
     }

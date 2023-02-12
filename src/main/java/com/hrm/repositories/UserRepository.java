@@ -1,6 +1,8 @@
 package com.hrm.repositories;
 
 import com.hrm.entities.AppUser;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -29,5 +31,8 @@ public interface UserRepository extends JpaRepository<AppUser, UUID>
     @Query("select a from AppUser a where a.verificationCode = ?1")
     AppUser findByVerificationCode(String verificationCode);
 
+    @EntityGraph(attributePaths = {"roles.appAuthorities"})
+    @Query("select a from AppUser a where a.isDeleted = false order by a.createdTime, a.username")
+    Page<AppUser> findAllNonDeleted(Pageable pageable);
 
 }

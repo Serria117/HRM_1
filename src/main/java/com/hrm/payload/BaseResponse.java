@@ -24,12 +24,25 @@ public class BaseResponse
     Long totalItems;
     Integer totalPages;
 
+    public static BaseResponse success()
+    {
+        return new BaseResponse().setCode("200")
+                                 .setMessage("Success");
+    }
+
     public static BaseResponse success(Object data)
     {
         return new BaseResponse().setCode("200")
                                  .setMessage("Success")
                                  .setData(data);
     }
+
+    public static BaseResponse success(String message)
+    {
+        return new BaseResponse().setCode("200")
+                                 .setMessage(message);
+    }
+
 
     public static BaseResponse success(Page<?> paging)
     {

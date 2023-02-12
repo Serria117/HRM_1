@@ -13,7 +13,6 @@ public class Assignment extends BaseEntity
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
-
     private String taskName;
     private String taskDescription;
 

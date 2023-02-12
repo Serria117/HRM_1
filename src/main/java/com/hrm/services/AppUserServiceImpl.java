@@ -3,6 +3,8 @@ package com.hrm.services;
 import com.hrm.entities.AppUser;
 import com.hrm.payload.BaseResponse;
 import com.hrm.payload.userdto.*;
+import com.hrm.repositories.ContractTypeRepository;
+import com.hrm.repositories.LaborContractRepository;
 import com.hrm.repositories.RoleRepository;
 import com.hrm.repositories.UserRepository;
 import com.hrm.security.AppUserDetails;
@@ -11,6 +13,7 @@ import com.hrm.services.contract.AppUserService;
 import com.hrm.services.contract.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,6 +37,8 @@ public class AppUserServiceImpl implements AppUserService
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final LaborContractRepository laborContractRepository;
+    private final ContractTypeRepository contractTypeRepository;
     private final EmailService emailService;
 
     @Override
@@ -49,9 +54,9 @@ public class AppUserServiceImpl implements AppUserService
                                   .setEmail(signUpDto.getEmail())
                                   .setRoles(new HashSet<>(roles))
                                   .setPassword(passwordEncoder.encode(signUpDto.getPassword()));
-            var res = userRepository.save(newUser);
+            var createdUser = userRepository.save(newUser);
             log.info("User created");
-            return BaseResponse.success(res);
+            return BaseResponse.success(createdUser);
         }
         catch ( Exception e ) {
             log.error("Failed creating user: " + e.getMessage());
@@ -222,5 +227,11 @@ public class AppUserServiceImpl implements AppUserService
     public void updateRefreshToken(String username, RefreshToken token)
     {
         userRepository.updateRefreshToken(username, token.getToken(), token.getExpireDate());
+    }
+
+    public BaseResponse getUserList(Integer page, Integer size)
+    {
+        var listUsers = userRepository.findAllNonDeleted(PageRequest.of(page, size));
+        return BaseResponse.success(listUsers);
     }
 }

@@ -7,6 +7,7 @@ import lombok.experimental.Accessors;
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity @Getter @Setter @Accessors(chain = true) @Table(name = "labor_contract")
 public class LaborContract extends BaseEntity
@@ -17,8 +18,7 @@ public class LaborContract extends BaseEntity
     private String contractNumber;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Integer contractTypeId;
-    @ManyToOne @JoinColumn(name = "user_id")
-    private AppUser user;
+    private Long contractTypeId;
+    private UUID userId;
     private Double basicSalary;
 }

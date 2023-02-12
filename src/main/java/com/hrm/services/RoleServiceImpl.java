@@ -24,7 +24,8 @@ public class RoleServiceImpl implements RoleService
     private final RoleRepository roleRepository;
     private final AuthorityRepository authorityRepository;
 
-    @Override@Async
+    @Override
+    @Async
     @PreAuthorize(value = "hasAuthority('ROLE_CREATE')")
     public CompletableFuture<BaseResponse> createRole(String roleName)
     {
@@ -32,23 +33,25 @@ public class RoleServiceImpl implements RoleService
         if ( !roleRepository.existByName(roleName) ) {
             var newRole = new AppRole().setRoleName(roleName);
             roleRepository.save(newRole);
-            return CompletableFuture.completedFuture(BaseResponse.success(newRole));
+            return CompletableFuture.completedFuture(BaseResponse.success("Role created: " + newRole.getRoleName()));
         }
         return CompletableFuture.completedFuture(BaseResponse.error("Role has already existed"));
     }
 
-    @Override@Async
+    @Override
+    @Async
     public CompletableFuture<BaseResponse> createAuthority(String authorityName)
     {
         if ( !authorityRepository.existByName(authorityName) ) {
             var newAuth = new AppAuthority().setName(authorityName);
             newAuth = authorityRepository.save(newAuth);
-            return CompletableFuture.completedFuture(BaseResponse.success(newAuth));
+            return CompletableFuture.completedFuture(BaseResponse.success("Authority created: " + newAuth.getName()));
         }
         return CompletableFuture.completedFuture(BaseResponse.error("Authority has already existed"));
     }
 
-    @Override@Async
+    @Override
+    @Async
     public CompletableFuture<BaseResponse> addAuthorityToRole(Long roleId, Collection<Long> authorityIds)
     {
         var authorities = authorityRepository.findAllById(authorityIds);
@@ -56,7 +59,7 @@ public class RoleServiceImpl implements RoleService
         if ( role != null ) {
             role.setAppAuthorities(new HashSet<>(authorities));
             role = roleRepository.save(role);
-            return CompletableFuture.completedFuture(BaseResponse.success(role));
+            return CompletableFuture.completedFuture(BaseResponse.success(role.getRoleName() + " updated"));
         }
         return CompletableFuture.completedFuture(BaseResponse.error("Can not assign authority to role"));
     }
