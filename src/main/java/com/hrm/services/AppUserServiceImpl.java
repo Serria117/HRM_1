@@ -71,7 +71,7 @@ public class AppUserServiceImpl implements AppUserService
     {
         return userRepository.existByName(username)
                ? BaseResponse.error("Username has already been taken")
-               : BaseResponse.success(null);
+               : BaseResponse.success();
     }
 
     /*
@@ -81,7 +81,7 @@ public class AppUserServiceImpl implements AppUserService
     {
         return userRepository.existByEmail(email)
                ? BaseResponse.error("Email has already been taken")
-               : BaseResponse.success(null);
+               : BaseResponse.success();
     }
 
 //    @Override
