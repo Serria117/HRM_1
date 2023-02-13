@@ -11,12 +11,14 @@ import com.hrm.security.AppUserDetails;
 import com.hrm.security.JWTProvider;
 import com.hrm.services.contract.AppUserService;
 import com.hrm.services.contract.EmailService;
+import com.hrm.utils.MapperUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,7 @@ public class AppUserServiceImpl implements AppUserService
     private final LaborContractRepository laborContractRepository;
     private final ContractTypeRepository contractTypeRepository;
     private final EmailService emailService;
+    private final MapperUtils mapperUtils;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -53,6 +56,8 @@ public class AppUserServiceImpl implements AppUserService
                                   .setUsername(signUpDto.getUsername())
                                   .setEmail(signUpDto.getEmail())
                                   .setRoles(new HashSet<>(roles))
+                                  .setPhone(signUpDto.getPhone())
+                                  .setBankAccount(signUpDto.getBankAccount())
                                   .setPassword(passwordEncoder.encode(signUpDto.getPassword()));
             var createdUser = userRepository.save(newUser);
             log.info("User created");
@@ -153,31 +158,6 @@ public class AppUserServiceImpl implements AppUserService
         }
     }
 
-
-//    private void sendVerificationCode(GuestSignUpDto signUpDto, HttpServletRequest request)
-//            throws ExecutionException, InterruptedException
-//    {
-//        String body = """
-//                Dear [[name]],<br>
-//                Please click the link below to verify your registration:<br>
-//                <h3><a href=\\"[[URL]]\\" target=\\"_self\\">VERIFY</a></h3>
-//                Thank you,<br>
-//                MyBooking Co., ltd
-//                """;
-//        var siteURL = request.getRequestURL()
-//                             .toString()
-//                             .replace(request.getServletPath(), "");
-//
-//        body = body.replace("[[name]]", signUpDto.getUsername());
-//        body = body.replace("[[URL]]", siteURL);
-//        var message = EmailDetails.builder()
-//                                  .recipient(signUpDto.getEmail())
-//                                  .msgBody(body)
-//                                  .subject("Verification email")
-//                                  .build();
-//        emailService.sendFormattedEmail(message).get();
-//    }
-
     @Override
     public TokenResponse signIn(SignInDto signInDto)
     {
@@ -222,16 +202,65 @@ public class AppUserServiceImpl implements AppUserService
         return refreshToken;
     }
 
-
     @Override
     public void updateRefreshToken(String username, RefreshToken token)
     {
         userRepository.updateRefreshToken(username, token.getToken(), token.getExpireDate());
     }
 
+    @Override
     public BaseResponse getUserList(Integer page, Integer size)
     {
         var listUsers = userRepository.findAllNonDeleted(PageRequest.of(page, size));
-        return BaseResponse.success(listUsers);
+        var res = listUsers.map(user -> new UserDisplayDto()
+                                                .setId(user.getId())
+                                                .setUsername(user.getUsername())
+                                                .setEmail(user.getEmail()));
+        return BaseResponse.success(res);
     }
+
+    public BaseResponse selfChangePassword(String oldPassword,
+                                           String newPassword,
+                                           UUID userId,
+                                           PasswordEncoder passwordEncoder,
+                                           Authentication authentication)
+    {
+        if ( !authentication.isAuthenticated() ) return BaseResponse.error("Not signed in");
+        var userDetails = (AppUserDetails) authentication.getPrincipal();
+
+        var user = userRepository.findById(userId).orElse(null);
+        if ( user == null ) return BaseResponse.error("User not found");
+        if ( !userDetails.getUserId().toString().equals(userId.toString()) ) return BaseResponse.error("UserId does not match");
+
+        if ( passwordEncoder.matches(oldPassword, userDetails.getPassword()) ) {
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return BaseResponse.success("Password changed. Please sign off and then sign in again.");
+        }
+        return BaseResponse.error("Can not change password");
+    }
+
+//    private void sendVerificationCode(GuestSignUpDto signUpDto, HttpServletRequest request)
+//            throws ExecutionException, InterruptedException
+//    {
+//        String body = """
+//                Dear [[name]],<br>
+//                Please click the link below to verify your registration:<br>
+//                <h3><a href=\\"[[URL]]\\" target=\\"_self\\">VERIFY</a></h3>
+//                Thank you,<br>
+//                MyBooking Co., ltd
+//                """;
+//        var siteURL = request.getRequestURL()
+//                             .toString()
+//                             .replace(request.getServletPath(), "");
+//
+//        body = body.replace("[[name]]", signUpDto.getUsername());
+//        body = body.replace("[[URL]]", siteURL);
+//        var message = EmailDetails.builder()
+//                                  .recipient(signUpDto.getEmail())
+//                                  .msgBody(body)
+//                                  .subject("Verification email")
+//                                  .build();
+//        emailService.sendFormattedEmail(message).get();
+//    }
 }

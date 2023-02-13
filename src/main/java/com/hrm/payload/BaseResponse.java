@@ -44,15 +44,15 @@ public class BaseResponse
     }
 
 
-    public static BaseResponse success(Page<?> paging)
+    public static BaseResponse success(Page<?> page)
     {
         return new BaseResponse().setCode("200")
-                                 .setPage(paging.getNumber() + 1)
-                                 .setSize(paging.getSize())
-                                 .setTotalPages(paging.getTotalPages())
-                                 .setTotalItems(paging.getTotalElements())
+                                 .setPage(page.getNumber() + 1)
+                                 .setSize(page.getSize())
+                                 .setTotalPages(page.getTotalPages())
+                                 .setTotalItems(page.getTotalElements())
                                  .setMessage("Success")
-                                 .setData(paging.toList());
+                                 .setData(page.toList());
     }
 
     public static BaseResponse noContent()

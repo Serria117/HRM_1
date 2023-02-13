@@ -17,4 +17,6 @@ public interface AppUserService
     RefreshToken createRefreshToken();
 
     void updateRefreshToken(String username, RefreshToken token);
+
+    BaseResponse getUserList(Integer page, Integer size);
 }

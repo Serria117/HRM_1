@@ -17,5 +17,6 @@ public class SignUpDto
     String email;
     @Pattern(regexp = "^[0-9]{8,12}$")
     String phone;
+    String bankAccount;
     Collection<Long> roles;
 }

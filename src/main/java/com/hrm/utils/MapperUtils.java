@@ -2,6 +2,7 @@ package com.hrm.utils;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -25,6 +26,10 @@ public class MapperUtils
         return s.stream()
                 .map( x -> mapper.map(x, d))
                 .collect(Collectors.toSet());
+    }
+
+    public <S, D> Page<D> mapToPage(Page<S> s, Class<D> d){
+        return s.map(s1 -> mapper.map(s1, d));
     }
 
     public ModelMapper getMapper()

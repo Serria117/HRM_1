@@ -39,16 +39,14 @@ public class AppUser extends BaseEntity implements Serializable
     String bankFullName;
     @Size(min = 3, max = 10)
     String bankShortName;
-
-    Byte biometricData;
+    Byte[] biometricData;
     String refreshToken;
     LocalDateTime refreshTokenExpiration;
     LocalDateTime lastLoginTime;
+    Boolean isPasswordReset = false;
     String lastLoginIP;
-
     String verificationCode;
     LocalDateTime verifyCodeExpiration;
-
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),
