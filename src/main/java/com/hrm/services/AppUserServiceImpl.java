@@ -36,7 +36,7 @@ public class AppUserServiceImpl implements AppUserService
 {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final JWTProvider JWTProvider;
+    private final JWTProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
@@ -138,16 +138,16 @@ public class AppUserServiceImpl implements AppUserService
                             signInDto.getPassword()));
             if ( auth.isAuthenticated() ) {
                 var userDetails = (AppUserDetails) userDetailsService.loadUserByUsername(signInDto.getUsername());
-                var token = JWTProvider.createToken(userDetails);
+                var token = jwtProvider.createToken(userDetails);
                 var refreshToken = createRefreshToken();
                 updateRefreshToken(signInDto.getUsername(), refreshToken);
                 return new TokenResponse().setUsername(signInDto.getUsername())
                                           .setUserId(userDetails.getUserId())
                                           .setAccessToken(token)
                                           .setRefreshToken(refreshToken.getToken())
-                                          .setExpiration(JWTProvider.getExpiration(token))
-                                          .setRoles(new LinkedHashSet<>(JWTProvider.getRoleFromUser(userDetails)))
-                                          .setAuthorities(new LinkedHashSet<>(JWTProvider.getAuthorityFromUser(userDetails)))
+                                          .setExpiration(jwtProvider.getExpiration(token))
+                                          .setRoles(new LinkedHashSet<>(jwtProvider.getRoleFromUser(userDetails)))
+                                          .setAuthorities(new LinkedHashSet<>(jwtProvider.getAuthorityFromUser(userDetails)))
                                           .setCode("200")
                                           .setMessage("Successfully logged in");
             }
