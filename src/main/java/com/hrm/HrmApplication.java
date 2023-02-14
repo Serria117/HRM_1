@@ -47,7 +47,7 @@ public class HrmApplication
         var roles = new ArrayList<AppRole>();
 
         String[] contractTypeToCreate = {
-          "Internship", "Partnership", "Fixed-term contract", "Indefinite contract"
+                "Internship", "Partnership", "Fixed-term contract", "Indefinite contract"
         };
         var contractTypes = new ArrayList<ContractType>();
 
@@ -58,16 +58,16 @@ public class HrmApplication
                     roles.add(new AppRole().setRoleName(role));
                 }
             }
-            if(!roles.isEmpty()) {
+            if ( !roles.isEmpty() ) {
                 roleRepository.saveAll(roles);
             }
             //Seed some contract types:
-            for(var type : contractTypeToCreate){
-                if( !contractTypeRepository.existByName(type) ){
+            for ( var type : contractTypeToCreate ) {
+                if ( !contractTypeRepository.existByName(type) ) {
                     contractTypes.add(new ContractType().setTypeName(type));
                 }
             }
-            if(!contractTypes.isEmpty()){
+            if ( !contractTypes.isEmpty() ) {
                 contractTypeRepository.saveAll(contractTypes);
             }
         };

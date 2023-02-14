@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -89,37 +90,6 @@ public class AppUserServiceImpl implements AppUserService
                : BaseResponse.success();
     }
 
-//    @Override
-//    @Transactional(rollbackFor = Exception.class)
-//    public BaseResponse guestSignUp(GuestSignUpDto signUpDto, HttpServletRequest request)
-//    {
-//        try {
-//            if ( userRepository.existByName(signUpDto.getUsername()) ) throw new RuntimeException("Username already taken");
-//            if ( userRepository.existByEmail(signUpDto.getEmail()) ) throw new RuntimeException("Email already taken");
-//            var role = roleRepository.findByName("ROLE_REGISTERED");
-//            var newGuest = new GuestAccount()
-//                                   .setFirstName(signUpDto.getFirstName())
-//                                   .setLastName(signUpDto.getLastName());
-//            newGuest = guestAccountRepository.save(newGuest);
-//            var verificationCode = RandomString.make(128);
-//            var newUser = (AppUser) new AppUser()
-//                                            .setUsername(signUpDto.getUsername())
-//                                            .setEmail(signUpDto.getEmail())
-//                                            .setPassword(passwordEncoder.encode(signUpDto.getPassword()))
-//                                            .setRoles(new HashSet<>(Collections.singletonList(role)))
-//                                            .setGuestAccount(newGuest)
-//                                            .setIsEnabled(false)
-//                                            .setVerificationCode(verificationCode)
-//                                            .setVerifyCodeExpiration(LocalDateTime.now().plusHours(24))
-//                                            .setCreatedTime(LocalDateTime.now());
-//            sendVerificationCode(signUpDto, request);
-//            return BaseResponse.success(userRepository.save(newUser));
-//        }
-//        catch ( Exception e ) {
-//            log.error("Failed creating user: " + e.getMessage());
-//            return BaseResponse.error(e.getMessage());
-//        }
-//    }
 
     @Async
     public CompletableFuture<VerifyResponse> activateAccount(String verificationCode)
@@ -176,6 +146,8 @@ public class AppUserServiceImpl implements AppUserService
                                           .setAccessToken(token)
                                           .setRefreshToken(refreshToken.getToken())
                                           .setExpiration(JWTProvider.getExpiration(token))
+                                          .setRoles(new LinkedHashSet<>(JWTProvider.getRoleFromUser(userDetails)))
+                                          .setAuthorities(new LinkedHashSet<>(JWTProvider.getAuthorityFromUser(userDetails)))
                                           .setCode("200")
                                           .setMessage("Successfully logged in");
             }
@@ -212,7 +184,7 @@ public class AppUserServiceImpl implements AppUserService
     public BaseResponse getUserList(Integer page, Integer size)
     {
         var listUsers = userRepository.findAllNonDeleted(PageRequest.of(page, size));
-        var res = listUsers.map(user -> new UserDisplayDto()
+        var res = listUsers.map(user -> new UserDisplayDto(user)
                                                 .setId(user.getId())
                                                 .setUsername(user.getUsername())
                                                 .setEmail(user.getEmail()));
@@ -262,5 +234,38 @@ public class AppUserServiceImpl implements AppUserService
 //                                  .subject("Verification email")
 //                                  .build();
 //        emailService.sendFormattedEmail(message).get();
+//    }
+
+
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public BaseResponse guestSignUp(GuestSignUpDto signUpDto, HttpServletRequest request)
+//    {
+//        try {
+//            if ( userRepository.existByName(signUpDto.getUsername()) ) throw new RuntimeException("Username already taken");
+//            if ( userRepository.existByEmail(signUpDto.getEmail()) ) throw new RuntimeException("Email already taken");
+//            var role = roleRepository.findByName("ROLE_REGISTERED");
+//            var newGuest = new GuestAccount()
+//                                   .setFirstName(signUpDto.getFirstName())
+//                                   .setLastName(signUpDto.getLastName());
+//            newGuest = guestAccountRepository.save(newGuest);
+//            var verificationCode = RandomString.make(128);
+//            var newUser = (AppUser) new AppUser()
+//                                            .setUsername(signUpDto.getUsername())
+//                                            .setEmail(signUpDto.getEmail())
+//                                            .setPassword(passwordEncoder.encode(signUpDto.getPassword()))
+//                                            .setRoles(new HashSet<>(Collections.singletonList(role)))
+//                                            .setGuestAccount(newGuest)
+//                                            .setIsEnabled(false)
+//                                            .setVerificationCode(verificationCode)
+//                                            .setVerifyCodeExpiration(LocalDateTime.now().plusHours(24))
+//                                            .setCreatedTime(LocalDateTime.now());
+//            sendVerificationCode(signUpDto, request);
+//            return BaseResponse.success(userRepository.save(newUser));
+//        }
+//        catch ( Exception e ) {
+//            log.error("Failed creating user: " + e.getMessage());
+//            return BaseResponse.error(e.getMessage());
+//        }
 //    }
 }
