@@ -44,6 +44,7 @@ public class AppUser extends BaseEntity implements Serializable
     LocalDateTime refreshTokenExpiration;
     LocalDateTime lastLoginTime;
     Boolean isPasswordReset = false;
+    Long recruitmentRequestId;
     String lastLoginIP;
     String verificationCode;
     LocalDateTime verifyCodeExpiration;
