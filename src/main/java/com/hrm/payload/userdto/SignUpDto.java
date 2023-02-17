@@ -9,9 +9,11 @@ import java.util.Collection;
 @Data
 public class SignUpDto
 {
-    @NotBlank @Length(max = 100, min = 3, message = "Username must has minimum of 3 and maximum of 100 characters")
+    @NotBlank @Length(max = 100, min = 3, message = "Username must has minimum 3 and maximum 100 characters")
     String username;
-    @NotBlank @Length(max = 60, min = 4, message = "Password must has minimum of 4 and maximum of 60 characters")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{4,}$",
+            message = "Password must contain minimum 4 characters, at least 1 uppercase letter, 1 lowercase letter and 1 number")
     String password;
     @Email(message = "A valid email address is required")
     String email;

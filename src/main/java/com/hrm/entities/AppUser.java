@@ -1,5 +1,6 @@
 package com.hrm.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -27,6 +28,7 @@ public class AppUser extends BaseEntity implements Serializable
     String username;
     @Size(min = 3, max = 255)
     String fullName;
+    @JsonIgnore
     String password;
     @Email
     String email;
@@ -39,7 +41,7 @@ public class AppUser extends BaseEntity implements Serializable
     String bankFullName;
     @Size(min = 3, max = 10)
     String bankShortName;
-    Byte[] biometricData;
+    String biometricData;
     String refreshToken;
     LocalDateTime refreshTokenExpiration;
     LocalDateTime lastLoginTime;

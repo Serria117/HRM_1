@@ -13,8 +13,8 @@ import java.util.UUID;
 public class Leave extends BaseEntity
 {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false) private
-    Long id;
+    @Column(name = "id", nullable = false)
+    private Long id;
     LocalDate dateApply;
     Integer duration; //0=full day, 1 = 0.5 day
     UUID registerEmployee;
