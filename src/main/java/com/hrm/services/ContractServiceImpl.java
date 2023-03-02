@@ -1,10 +1,12 @@
 package com.hrm.services;
 
+import com.baseapp.services.contract.ContractService;
 import com.hrm.entities.LaborContract;
 import com.hrm.payload.BaseResponse;
 import com.hrm.repositories.ContractTypeRepository;
 import com.hrm.repositories.LaborContractRepository;
 import com.hrm.repositories.UserRepository;
+import com.hrm.utils.CommonFn;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -13,17 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.util.annotation.Nullable;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Service @Slf4j @RequiredArgsConstructor
-public class ContractServiceImpl
+public class ContractServiceImpl implements ContractService
 {
     private final LaborContractRepository laborContractRepository;
     private final ContractTypeRepository contractTypeRepository;
     private final UserRepository userRepository;
 
+    @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse createNewContract(UUID userId,
+    public BaseResponse createNewContract(String userId,
                                           Long contractTypeId,
                                           LocalDate startDate,
                                           @Nullable LocalDate endDate,
@@ -31,14 +33,15 @@ public class ContractServiceImpl
     {
         if ( !authentication.isAuthenticated() ) return BaseResponse.error("Unauthorized");
         //check valid user:
-        if ( !userRepository.existsById(userId) ) {
+        var uId = CommonFn.stringToUUID(userId);
+        if ( !userRepository.existsById(uId) ) {
             return BaseResponse.error("Invalid User Id");
         }
 
-        laborContractRepository.findByCurrentContract(userId, true)
+        laborContractRepository.findByCurrentContract(uId, true)
                                .ifPresent(c -> c.setIsActivated(false));
 
-        var newContract = new LaborContract().setUserId(userId)
+        var newContract = new LaborContract().setUserId(uId)
                                              .setStartDate(startDate)
                                              .setEndDate(endDate)
                                              .setContractTypeId(contractTypeId);

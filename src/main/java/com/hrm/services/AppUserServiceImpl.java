@@ -61,8 +61,8 @@ public class AppUserServiceImpl implements AppUserService
                                   .setBankAccount(signUpDto.getBankAccount())
                                   .setPassword(passwordEncoder.encode(signUpDto.getPassword()));
             var createdUser = userRepository.save(newUser);
-            log.info("User created");
-            return BaseResponse.success(createdUser);
+            log.info("New user created");
+            return BaseResponse.success(new UserDisplayDto(createdUser));
         }
         catch ( Exception e ) {
             log.error("Failed creating user: " + e.getMessage());
@@ -202,7 +202,8 @@ public class AppUserServiceImpl implements AppUserService
 
         var user = userRepository.findById(userId).orElse(null);
         if ( user == null ) return BaseResponse.error("User not found");
-        if ( !userDetails.getUserId().toString().equals(userId.toString()) ) return BaseResponse.error("UserId does not match");
+        if ( !userDetails.getUserId().toString().equals(userId.toString()) )
+            return BaseResponse.error("UserId does not match");
 
         if ( passwordEncoder.matches(oldPassword, userDetails.getPassword()) ) {
             user.setPassword(passwordEncoder.encode(newPassword));

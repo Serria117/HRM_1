@@ -30,6 +30,7 @@ public abstract class BaseEntity
     public void setCreation(Authentication authentication)
     {
         this.createdByUser = authentication.getName();
+        this.lastModifiedByUser = authentication.getName();
     }
 
     public void setModification(Authentication authentication)
