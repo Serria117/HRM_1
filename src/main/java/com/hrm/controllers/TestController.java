@@ -3,18 +3,17 @@ package com.hrm.controllers;
 import com.hrm.configurations.SwaggerConfig;
 import com.hrm.repositories.UserRepository;
 import com.hrm.services.AppUserServiceImpl;
+import com.hrm.services.UserServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController @RequestMapping("/api/test")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_NAME)
@@ -53,5 +52,11 @@ public class TestController
     {
         var res = userService.getUserList(page, size);
         return ResponseEntity.ok(res);
+    }
+
+    @GetMapping("user/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable(name = "id") UUID id) throws Exception {
+        var user = userService.getUser(id);
+        return ResponseEntity.ok(user);
     }
 }

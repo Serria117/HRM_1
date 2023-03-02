@@ -1,4 +1,4 @@
-package com.hrm.entities;
+package com.hrm.payload;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,11 +8,11 @@ import org.springframework.security.core.Authentication;
 import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 
-@MappedSuperclass @Getter @Setter @Accessors(chain = true)
-public abstract class   BaseEntity
-{
-    protected Boolean isActivated = true;
-    protected Boolean isDeleted = false;
+@MappedSuperclass
+@Getter
+@Setter
+@Accessors(chain = true)
+public abstract class BaseRequest {
     protected LocalDateTime createdTime = LocalDateTime.now();
     protected LocalDateTime lastModifiedTime;
     protected String createdByUser;
