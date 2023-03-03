@@ -2,7 +2,7 @@ package com.hrm.controllers;
 
 import com.hrm.payload.BaseResponse;
 import com.hrm.payload.departmentDto.DepartmentCreateDto;
-import com.hrm.services.DepartmentServiceImpl;
+import com.hrm.services.contract.DepartmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -12,14 +12,13 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class DepartmentController
 {
-    private final DepartmentServiceImpl departmentService;
+    private final DepartmentService departmentService;
 
     @PostMapping("create")
     public BaseResponse createDepartment(DepartmentCreateDto dto,
-                                         @RequestParam(required = false) String userId,
                                          Authentication auth)
     {
-        return departmentService.createDepartment(dto, userId, auth);
+        return departmentService.createDepartment(dto, auth);
     }
 
     @GetMapping("get-all")

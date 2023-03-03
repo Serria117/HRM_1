@@ -9,21 +9,18 @@ import com.hrm.repositories.DepartmentRepository;
 import com.hrm.repositories.UserRepository;
 import com.hrm.services.contract.DepartmentService;
 import com.hrm.utils.CommonFn;
-import com.hrm.utils.MapperUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.webjars.NotFoundException;
-import reactor.util.annotation.Nullable;
 
 @Service @RequiredArgsConstructor @Transactional(rollbackFor = Exception.class)
 public class DepartmentServiceImpl implements DepartmentService
 {
     private final DepartmentRepository depRepository;
     private final UserRepository userRepository;
-    private final MapperUtils mapper;
 
     @Override
     public BaseResponse getListDepartment(int page, int size)
@@ -38,23 +35,53 @@ public class DepartmentServiceImpl implements DepartmentService
 
     @Override
     public BaseResponse createDepartment(DepartmentCreateDto dto,
-                                         @Nullable String mngUserId,
                                          Authentication auth)
     {
         try {
-            if( depRepository.ExistByNameOrCode(dto.getDepartmentName(), dto.getDepartmentCode()) )
+            if ( this.checkDepExist(dto.getDepartmentName(), dto.getDepartmentCode()) ) {
                 throw new DuplicatedException("Name or code name has already been taken");
+            }
 
             var newDepartment = new Department().setDepartmentCode(dto.getDepartmentCode())
                                                 .setDepartmentName(dto.getDepartmentName());
-            if ( mngUserId != null ) {
-                userRepository.findById(CommonFn.stringToUUID(mngUserId))
+
+            if ( dto.getMngUserId() != null ) {
+                userRepository.findById(CommonFn.stringToUUID(dto.getMngUserId()))
                               .ifPresent(newDepartment::setManagementUser);
             }
+
             newDepartment.setCreation(auth);
             var savedDepartment = depRepository.save(newDepartment);
             return BaseResponse.success(new DepartmentViewDto().fromDepartment(savedDepartment)
             );
+        }
+        catch ( Exception e ) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+
+    public BaseResponse editDepartment(Long depId, DepartmentCreateDto dto, Authentication auth)
+    {
+        try {
+            if ( this.checkDepExist(dto.getDepartmentName(), dto.getDepartmentCode()) ) {
+                throw new DuplicatedException("Name or code name has already been taken");
+            }
+
+            var foundDep = depRepository.findById(depId)
+                                        .orElseThrow(() -> new NotFoundException("Department not found"));
+
+            foundDep.setDepartmentName(dto.getDepartmentName() != null
+                                       ? dto.getDepartmentName() : foundDep.getDepartmentName())
+                    .setDepartmentCode(dto.getDepartmentCode() != null
+                                       ? dto.getDepartmentCode() : foundDep.getDepartmentCode());
+
+            if(dto.getMngUserId() != null) {
+                userRepository.findById(CommonFn.stringToUUID(dto.getMngUserId()))
+                        .ifPresent(foundDep::setManagementUser);
+            }
+            foundDep.setModification(auth);
+            var savedDep = depRepository.save(foundDep);
+            return BaseResponse.success(new DepartmentViewDto().fromDepartment(savedDep));
         }
         catch ( Exception e ) {
             return BaseResponse.error(e.getMessage());
@@ -71,12 +98,17 @@ public class DepartmentServiceImpl implements DepartmentService
             var foundUser = userRepository.findById(CommonFn.stringToUUID(userId))
                                           .orElseThrow(()
                                                                -> new NotFoundException("User not found exception"));
-            foundDep.setModification(auth);
             foundDep.setManagementUser(foundUser);
+            foundDep.setModification(auth);
             return BaseResponse.success();
         }
         catch ( Exception e ) {
             return BaseResponse.error(e.getMessage());
         }
+    }
+
+    private boolean checkDepExist(String name, String code)
+    {
+        return depRepository.ExistByNameOrCode(name, code);
     }
 }

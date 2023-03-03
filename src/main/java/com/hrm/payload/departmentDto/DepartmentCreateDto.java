@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import reactor.util.annotation.Nullable;
 
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -16,4 +17,5 @@ public class DepartmentCreateDto implements Serializable
 {
     @Size(max = 100) private String departmentName;
     @Size(max = 10) private String departmentCode;
+    @Nullable private String mngUserId;
 }
