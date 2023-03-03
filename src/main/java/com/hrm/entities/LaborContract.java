@@ -19,6 +19,7 @@ public class LaborContract extends BaseEntity
     private LocalDate startDate;
     private LocalDate endDate;
     private Long contractTypeId;
+    @Column(name = "userId", nullable = true, columnDefinition = "binary(16)")
     private UUID userId;
     private Double basicSalary;
 }

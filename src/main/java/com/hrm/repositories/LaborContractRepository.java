@@ -15,5 +15,4 @@ public interface LaborContractRepository extends JpaRepository<LaborContract, Lo
                     "where u.id = ?1 and l.is_activated = ?2")
     Optional<LaborContract> findByCurrentContract(UUID userId, Boolean isActivated);
 
-
 }

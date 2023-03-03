@@ -1,4 +1,4 @@
-package com.hrm.dto;
+package com.hrm.dto.department;
 
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -11,4 +11,6 @@ public class DepartmentDto implements Serializable {
     private Long id;
     private String departmentName;
     private String departmentCode;
+    private String mngUser;
+    private Integer numberEmployeeOfDepartment;
 }

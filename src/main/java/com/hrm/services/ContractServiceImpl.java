@@ -40,29 +40,51 @@ public class ContractServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class)
+    public LaborContract createNewContractt(LaborContractRequest lbContractRequest,
+                                           Authentication authentication)
+    {
+        var newContract = new LaborContract()
+                .setUserId(lbContractRequest.getUserId())
+                .setContractNumber(lbContractRequest.getContractNumber())
+                .setUserId(lbContractRequest.getUserId())
+                .setContractTypeId(lbContractRequest.getContractTypeId())
+                .setBasicSalary(lbContractRequest.getBasicSalary())
+                .setStartDate(lbContractRequest.getStartDate())
+                .setEndDate(lbContractRequest.getEndDate());
+        newContract.setCreation(authentication);
+
+        return laborContractRepository.save(newContract);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
     public BaseResponse createNewContractOfUser(LaborContractRequest lbContractRequest, Authentication authentication){
         try {
-
-            if (userRepository.existsById(lbContractRequest.getUserId())) {
-                laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).ifPresent(s -> {
+            var userExist = userRepository.findById(lbContractRequest.getUserId()).orElse(null);
+            if (userExist == null) {
+                throw new RuntimeException("User not found by id: " + lbContractRequest.getUserId());
+            } else {
+                var lbCurrentContract = laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).orElse(null);
+                if (lbCurrentContract != null ){
+                    lbCurrentContract.setIsActivated(false);
+                    laborContractRepository.save(lbCurrentContract);
+                }
+                /*laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).ifPresent(s -> {
                     s.setIsActivated(false);
                     laborContractRepository.save(s);
-                });
+                });*/
             }
-            var newContractOfUser = new LaborContractRequest()
+
+            var newContractOfUser = new LaborContract()
+                    .setId(lbContractRequest.getId())
+                    .setContractNumber(lbContractRequest.getContractNumber())
                     .setUserId(lbContractRequest.getUserId())
                     .setContractTypeId(lbContractRequest.getContractTypeId())
+                    .setBasicSalary(lbContractRequest.getBasicSalary())
                     .setStartDate(lbContractRequest.getStartDate())
                     .setEndDate(lbContractRequest.getEndDate());
+            newContractOfUser.setCreation(authentication);
 
-            var objData = new LaborContract()
-                    .setId(newContractOfUser.getId())
-                    .setContractTypeId(newContractOfUser.getContractTypeId())
-                    .setStartDate(newContractOfUser.getStartDate())
-                    .setEndDate(newContractOfUser.getEndDate());
-            objData.setCreation(authentication);
-
-            var contractCreate = laborContractRepository.save(objData);
+            var contractCreate = laborContractRepository.save(newContractOfUser);
             LOGGER.info("Create contract success!");
             return BaseResponse.success(contractCreate);
         } catch (Exception ex){
@@ -72,7 +94,7 @@ public class ContractServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateContractOfUser(Long lbContractId, Double baseSalary, Authentication authentication){
+    public boolean updateContractOfUser(Long lbContractId, Double baseSalary, Authentication authentication){
         try {
             var objExits = laborContractRepository.findById(lbContractId);
             if (objExits.isEmpty()){
@@ -92,6 +114,7 @@ public class ContractServiceImpl
         } catch (Exception ex){
             LOGGER.error("Update contract of user fail", ex);
         }
+        return false;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -117,7 +140,7 @@ public class ContractServiceImpl
         try {
 
             if (entity.isEmpty()) {
-                LOGGER.warn("Contact does not exist!)");
+                LOGGER.warn("Contact does not exist!");
             } else {
                 contractDto = new LaborContractDto();
                 contractDto.setId(entity.get().getId());

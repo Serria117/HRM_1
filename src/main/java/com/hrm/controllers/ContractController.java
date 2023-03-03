@@ -36,8 +36,20 @@ public class ContractController {
     }
 
     @PostMapping("/add-new")
-    public ResponseEntity<?> createNewContract(LaborContractRequest lbContractRequest, Authentication authentication){
+    public ResponseEntity<?> createNewContract(@RequestBody LaborContractRequest lbContractRequest, Authentication authentication){
+        var res = contractService.createNewContractt(lbContractRequest, authentication);
+        return res != null ? ResponseEntity.ok("Create contract success!") : ResponseEntity.badRequest().body(res);
+    }
+
+    @PostMapping("/add-new-user-contract")
+    public ResponseEntity<?> createNewContractOfUser(@RequestBody LaborContractRequest lbContractRequest, Authentication authentication){
         var res = contractService.createNewContractOfUser(lbContractRequest, authentication);
         return res.getSucceed() ? ResponseEntity.ok(res) : ResponseEntity.badRequest().body(res);
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> updateContract(@RequestParam Long lbContractId, @RequestParam Double baseSalary, Authentication authentication){
+        var res = contractService.updateContractOfUser(lbContractId, baseSalary, authentication);
+        return res ? ResponseEntity.ok("Update contract success!") :ResponseEntity.badRequest().body(false);
     }
 }
