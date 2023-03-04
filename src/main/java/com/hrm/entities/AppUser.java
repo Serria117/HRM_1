@@ -50,6 +50,7 @@ public class AppUser extends BaseEntity implements Serializable
     String lastLoginIP;
     String verificationCode;
     LocalDateTime verifyCodeExpiration;
+    String educationInfo;
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),

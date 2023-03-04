@@ -1,0 +1,13 @@
+security-config:
+  roles: ["ROLE_ADMIN", "ROLE_EMPLOYEE", "ROLE_MANAGER"]
+  permissions:
+    [
+      {
+        api: "/user/create",
+        permission: "USER_CREATE"
+      },
+      {
+        api: "/user/view",
+        permission: "USER_VIEW"
+      }
+    ]

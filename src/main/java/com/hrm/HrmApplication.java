@@ -2,9 +2,11 @@ package com.hrm;
 
 import com.hrm.configurations.SwaggerConfig;
 import com.hrm.entities.AppRole;
+import com.hrm.entities.AppUser;
 import com.hrm.entities.ContractType;
 import com.hrm.repositories.ContractTypeRepository;
 import com.hrm.repositories.RoleRepository;
+import com.hrm.repositories.UserRepository;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -14,8 +16,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 @SpringBootApplication
 @SecurityScheme(
@@ -38,9 +42,11 @@ public class HrmApplication
 
     @Bean
     CommandLineRunner commandLineRunner(RoleRepository roleRepository,
-                                        ContractTypeRepository contractTypeRepository)
+                                        ContractTypeRepository contractTypeRepository,
+                                        UserRepository userRepository,
+                                        PasswordEncoder passwordEncoder)
     {
-        String[] roleToCreate = {
+        String[] defaultRoles = {
                 "ROLE_SYSADMIN",
                 "ROLE_HR",
                 "ROLE_EMPLOYEE"};
@@ -53,11 +59,12 @@ public class HrmApplication
 
         return args -> {
             //Seed some roles:
-            for ( var role : roleToCreate ) {
+            for ( var role : defaultRoles ) {
                 if ( !roleRepository.existByName(role) ) {
                     roles.add(new AppRole().setRoleName(role));
                 }
             }
+
             if ( !roles.isEmpty() ) {
                 roleRepository.saveAll(roles);
             }
@@ -69,6 +76,21 @@ public class HrmApplication
             }
             if ( !contractTypes.isEmpty() ) {
                 contractTypeRepository.saveAll(contractTypes);
+            }
+            //Create the admin account:
+            if ( !userRepository.existByName("admin") ) {
+                var roleAdmin = roleRepository.findByName("admin");
+                if ( roleAdmin != null ) {
+                    var roleForAdmin = new HashSet<AppRole>();
+                    roleForAdmin.add(roleAdmin);
+                    var adminUser = (AppUser) new AppUser()
+                                                      .setUsername("admin")
+                                                      .setPassword(passwordEncoder.encode("123456"))
+                                                      .setRoles(roleForAdmin)
+                                                      .setCreatedByUser("admin")
+                                                      .setLastModifiedByUser("admin");
+                    userRepository.save(adminUser);
+                }
             }
         };
     }

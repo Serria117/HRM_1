@@ -1,5 +1,6 @@
 package com.hrm.services;
 
+import com.hrm.entities.AppRole;
 import com.hrm.entities.AppUser;
 import com.hrm.payload.BaseResponse;
 import com.hrm.payload.userdto.*;
@@ -52,11 +53,14 @@ public class AppUserServiceImpl implements AppUserService
         try {
             if ( userRepository.existByName(signUpDto.getUsername()) ) throw new RuntimeException("Username already taken");
             if ( userRepository.existByEmail(signUpDto.getEmail()) ) throw new RuntimeException("Email already taken");
-            var roles = roleRepository.findAllById(signUpDto.getRoles());
+            var roles = new HashSet<AppRole>();
+            for ( var roleId : signUpDto.getRoles() ) {
+                roles.add(roleRepository.getReferenceById(roleId));
+            }
             var newUser = new AppUser()
                                   .setUsername(signUpDto.getUsername())
                                   .setEmail(signUpDto.getEmail())
-                                  .setRoles(new HashSet<>(roles))
+                                  .setRoles(roles)
                                   .setPhone(signUpDto.getPhone())
                                   .setBankAccount(signUpDto.getBankAccount())
                                   .setPassword(passwordEncoder.encode(signUpDto.getPassword()));
@@ -202,8 +206,7 @@ public class AppUserServiceImpl implements AppUserService
 
         var user = userRepository.findById(userId).orElse(null);
         if ( user == null ) return BaseResponse.error("User not found");
-        if ( !userDetails.getUserId().toString().equals(userId.toString()) )
-            return BaseResponse.error("UserId does not match");
+        if ( !userDetails.getUserId().toString().equals(userId.toString()) ) {return BaseResponse.error("UserId does not match");}
 
         if ( passwordEncoder.matches(oldPassword, userDetails.getPassword()) ) {
             user.setPassword(passwordEncoder.encode(newPassword));
