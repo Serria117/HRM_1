@@ -40,31 +40,39 @@ public class ContractServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public LaborContract createNewContractt(LaborContractRequest lbContractRequest,
-                                           Authentication authentication)
+    public BaseResponse createNewContract(LaborContractRequest lbContractRequest,
+                                          Authentication authentication)
     {
-        var newContract = new LaborContract()
-                .setUserId(lbContractRequest.getUserId())
-                .setContractNumber(lbContractRequest.getContractNumber())
-                .setUserId(lbContractRequest.getUserId())
-                .setContractTypeId(lbContractRequest.getContractTypeId())
-                .setBasicSalary(lbContractRequest.getBasicSalary())
-                .setStartDate(lbContractRequest.getStartDate())
-                .setEndDate(lbContractRequest.getEndDate());
-        newContract.setCreation(authentication);
+        try {
+            var newContract = new LaborContract()
+                                      .setUserId(lbContractRequest.getUserId())
+                                      .setContractNumber(lbContractRequest.getContractNumber())
+                                      .setUserId(lbContractRequest.getUserId())
+                                      .setContractTypeId(lbContractRequest.getContractTypeId())
+                                      .setBasicSalary(lbContractRequest.getBasicSalary())
+                                      .setStartDate(lbContractRequest.getStartDate())
+                                      .setEndDate(lbContractRequest.getEndDate());
+            newContract.setCreation(authentication);
 
-        return laborContractRepository.save(newContract);
+            var saved = laborContractRepository.save(newContract);
+            return BaseResponse.success(saved);
+        }
+        catch ( Exception e ) {
+            return BaseResponse.error(e.getMessage());
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse createNewContractOfUser(LaborContractRequest lbContractRequest, Authentication authentication){
+    public BaseResponse createNewContractOfUser(LaborContractRequest lbContractRequest, Authentication authentication)
+    {
         try {
             var userExist = userRepository.findById(lbContractRequest.getUserId()).orElse(null);
-            if (userExist == null) {
+            if ( userExist == null ) {
                 throw new RuntimeException("User not found by id: " + lbContractRequest.getUserId());
-            } else {
+            }
+            else {
                 var lbCurrentContract = laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).orElse(null);
-                if (lbCurrentContract != null ){
+                if ( lbCurrentContract != null ) {
                     lbCurrentContract.setIsActivated(false);
                     laborContractRepository.save(lbCurrentContract);
                 }
@@ -75,87 +83,93 @@ public class ContractServiceImpl
             }
 
             var newContractOfUser = new LaborContract()
-                    .setId(lbContractRequest.getId())
-                    .setContractNumber(lbContractRequest.getContractNumber())
-                    .setUserId(lbContractRequest.getUserId())
-                    .setContractTypeId(lbContractRequest.getContractTypeId())
-                    .setBasicSalary(lbContractRequest.getBasicSalary())
-                    .setStartDate(lbContractRequest.getStartDate())
-                    .setEndDate(lbContractRequest.getEndDate());
+                                            .setId(lbContractRequest.getId())
+                                            .setContractNumber(lbContractRequest.getContractNumber())
+                                            .setUserId(lbContractRequest.getUserId())
+                                            .setContractTypeId(lbContractRequest.getContractTypeId())
+                                            .setBasicSalary(lbContractRequest.getBasicSalary())
+                                            .setStartDate(lbContractRequest.getStartDate())
+                                            .setEndDate(lbContractRequest.getEndDate());
             newContractOfUser.setCreation(authentication);
 
             var contractCreate = laborContractRepository.save(newContractOfUser);
             LOGGER.info("Create contract success!");
             return BaseResponse.success(contractCreate);
-        } catch (Exception ex){
+        }
+        catch ( Exception ex ) {
             LOGGER.error("Create contractOfUser fail", ex);
             return BaseResponse.error(ex.getMessage());
         }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateContractOfUser(Long lbContractId, Double baseSalary, Authentication authentication){
+    public boolean updateContract(Long lbContractId, Double baseSalary, Authentication authentication)
+    {
         try {
             var objExits = laborContractRepository.findById(lbContractId);
-            if (objExits.isEmpty()){
+            if ( objExits.isEmpty() ) {
                 LOGGER.warn("Contract does not exist!");
-            } else {
+            }
+            else {
                 var objRequest = new LaborContractRequest()
-                    .setId(objExits.get().getId())
-                    .setBasicSalary(baseSalary);
+                                         .setId(objExits.get().getId())
+                                         .setBasicSalary(baseSalary);
 
                 var objData = new LaborContract()
-                        .setId(objRequest.getId())
-                        .setBasicSalary(objRequest.getBasicSalary());
+                                      .setId(objRequest.getId())
+                                      .setBasicSalary(objRequest.getBasicSalary());
                 objData.setModification(authentication);
 
                 laborContractRepository.save(objData);
             }
-        } catch (Exception ex){
+        }
+        catch ( Exception ex ) {
             LOGGER.error("Update contract of user fail", ex);
         }
         return false;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void changeStatusContract(Long lbContactId, Authentication authentication){
+    public BaseResponse changeStatusContract(Long lbContactId, Authentication authentication)
+    {
         try {
-            if (!laborContractRepository.existsById(lbContactId)) {
-                LOGGER.warn("Contact does not exist!");
-            } else {
-                laborContractRepository.findById(lbContactId).ifPresent(s -> {
-                    s.setIsActivated(false);
-                    s.setModification(authentication);
-                    laborContractRepository.save(s);
-                });
-            }
-        } catch (Exception ex){
+            var foundContract = laborContractRepository.findById(lbContactId)
+                                                       .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
+            foundContract.setIsActivated(false);
+            foundContract.setModification(authentication);
+            laborContractRepository.save(foundContract);
+            return BaseResponse.success();
+        }
+        catch ( Exception ex ) {
             LOGGER.error("Change status contract fail!", ex);
+            return BaseResponse.error(ex.getMessage());
         }
     }
 
-    public LaborContractDto contractViewDetail(Long lbContractId){
-        LaborContractDto contractDto = null;
-        var entity = laborContractRepository.findById(lbContractId);
+    public BaseResponse contractViewDetail(Long lbContractId)
+    {
         try {
+            var foundContract = laborContractRepository
+                                        .findById(lbContractId)
+                                        .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
+            var user = userRepository.getReferenceById(foundContract.getUserId());
 
-            if (entity.isEmpty()) {
-                LOGGER.warn("Contact does not exist!");
-            } else {
-                contractDto = new LaborContractDto();
-                contractDto.setId(entity.get().getId());
-                contractDto.setContractNumber(entity.get().getContractNumber());
-                contractDto.setContractOfUser(userRepository.getReferenceById(entity.get().getUserId()).getFullName());
-                contractDto.setContractTypeName(contractTypeRepository.getReferenceById(entity.get().getContractTypeId()).getTypeName());
-                contractDto.setEmailOfUser(userRepository.getReferenceById(entity.get().getUserId()).getEmail());
-                contractDto.setPhoneOfUser(userRepository.getReferenceById(entity.get().getUserId()).getPhone());
-                contractDto.setStartDate(entity.get().getStartDate());
-                contractDto.setEndDate(entity.get().getEndDate());
-            }
-        } catch (Exception ex) {
-            LOGGER.error("Contract view detail fail:", ex);
+            var contractDto =
+                    new LaborContractDto().setId(foundContract.getId())
+                                          .setContractNumber(foundContract.getContractNumber())
+                                          .setContractOfUser(user.getFullName())
+                                          .setContractTypeName(contractTypeRepository
+                                                                       .getReferenceById(foundContract.getContractTypeId())
+                                                                       .getTypeName())
+                                          .setEmailOfUser(user.getEmail())
+                                          .setPhoneOfUser(user.getPhone())
+                                          .setStartDate(foundContract.getStartDate())
+                                          .setEndDate(foundContract.getEndDate());
+            return BaseResponse.success(contractDto);
         }
-
-        return contractDto;
+        catch ( Exception ex ) {
+            LOGGER.error("Contract view detail fail:", ex);
+            return BaseResponse.error(ex.getMessage());
+        }
     }
 }

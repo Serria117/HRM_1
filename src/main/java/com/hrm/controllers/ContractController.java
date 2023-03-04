@@ -9,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("api/contract")
 @SecurityRequirement(name = SwaggerConfig.SECURITY_NAME)
@@ -37,7 +35,7 @@ public class ContractController {
 
     @PostMapping("/add-new")
     public ResponseEntity<?> createNewContract(@RequestBody LaborContractRequest lbContractRequest, Authentication authentication){
-        var res = contractService.createNewContractt(lbContractRequest, authentication);
+        var res = contractService.createNewContract(lbContractRequest, authentication);
         return res != null ? ResponseEntity.ok("Create contract success!") : ResponseEntity.badRequest().body(res);
     }
 
@@ -49,7 +47,7 @@ public class ContractController {
 
     @PostMapping("/update")
     public ResponseEntity<?> updateContract(@RequestParam Long lbContractId, @RequestParam Double baseSalary, Authentication authentication){
-        var res = contractService.updateContractOfUser(lbContractId, baseSalary, authentication);
+        var res = contractService.updateContract(lbContractId, baseSalary, authentication);
         return res ? ResponseEntity.ok("Update contract success!") :ResponseEntity.badRequest().body(false);
     }
 }
