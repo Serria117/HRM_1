@@ -1,6 +1,5 @@
 package com.hrm.services;
 
-import com.baseapp.services.contract.ContractService;
 import com.hrm.entities.LaborContract;
 import com.hrm.payload.BaseResponse;
 import com.hrm.repositories.ContractTypeRepository;
@@ -17,13 +16,12 @@ import reactor.util.annotation.Nullable;
 import java.time.LocalDate;
 
 @Service @Slf4j @RequiredArgsConstructor
-public class ContractServiceImpl implements ContractService
+public class ContractServiceImpl
 {
     private final LaborContractRepository laborContractRepository;
     private final ContractTypeRepository contractTypeRepository;
     private final UserRepository userRepository;
 
-    @Override
     @Transactional(rollbackFor = Exception.class)
     public BaseResponse createNewContract(String userId,
                                           Long contractTypeId,

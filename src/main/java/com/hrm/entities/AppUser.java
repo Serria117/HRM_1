@@ -41,7 +41,6 @@ public class AppUser extends BaseEntity implements Serializable
     String bankFullName;
     @Size(min = 3, max = 10)
     String bankShortName;
-    String biometricData;
     String refreshToken;
     LocalDateTime refreshTokenExpiration;
     LocalDateTime lastLoginTime;

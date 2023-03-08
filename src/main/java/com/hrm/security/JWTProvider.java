@@ -45,6 +45,10 @@ public class JWTProvider
                           .collect(Collectors.toList());
     }
 
+    public UUID getIdFromUser(AppUserDetails userDetails){
+        return userDetails.getUserId();
+    }
+
     private <T> T extractFromToken(String token, Function<Claims, T> claimResolver)
     {
         var claims = Jwts.parserBuilder()
@@ -55,11 +59,12 @@ public class JWTProvider
         return claimResolver.apply(claims);
     }
 
-    public String createToken(UserDetails userDetails)
+    public String createToken(AppUserDetails userDetails)
     {
         var claims = new HashMap<String, Object>();
         claims.put("roles", getRoleFromUser(userDetails));
         claims.put("authorities", getAuthorityFromUser(userDetails));
+        claims.put("id", getIdFromUser(userDetails));
         var now = new Date(System.currentTimeMillis());
         return Jwts.builder()
                    .setClaims(claims)
@@ -75,6 +80,10 @@ public class JWTProvider
         return extractFromToken(token, Claims::getSubject);
     }
 
+    public String getUserIdFromToken(String token)
+    {
+        return extractFromToken(token, claims -> claims.get("id", String.class));
+    }
     public Date getExpiration(String token)
     {
         return extractFromToken(token, Claims::getExpiration);

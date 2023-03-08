@@ -47,7 +47,7 @@ public class HrmApplication
                                         PasswordEncoder passwordEncoder)
     {
         String[] defaultRoles = {
-                "ROLE_SYSADMIN",
+                "ROLE_ADMIN",
                 "ROLE_HR",
                 "ROLE_EMPLOYEE"};
         var roles = new ArrayList<AppRole>();
@@ -79,7 +79,7 @@ public class HrmApplication
             }
             //Create the admin account:
             if ( !userRepository.existByName("admin") ) {
-                var roleAdmin = roleRepository.findByName("admin");
+                var roleAdmin = roleRepository.findByName("ROLE_ADMIN");
                 if ( roleAdmin != null ) {
                     var roleForAdmin = new HashSet<AppRole>();
                     roleForAdmin.add(roleAdmin);

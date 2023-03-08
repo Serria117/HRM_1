@@ -2,6 +2,7 @@ package com.hrm.controllers;
 
 import com.hrm.configurations.SwaggerConfig;
 import com.hrm.repositories.UserRepository;
+import com.hrm.security.JWTProvider;
 import com.hrm.services.AppUserServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController @RequestMapping("/api/test")
@@ -23,11 +25,15 @@ public class TestController
 {
     private final UserRepository userRepository;
     private final AppUserServiceImpl userService;
+    private final JWTProvider jwtProvider;
 
-    public TestController(UserRepository userRepository, AppUserServiceImpl userService)
+    public TestController(UserRepository userRepository,
+                          AppUserServiceImpl userService,
+                          JWTProvider jwtProvider)
     {
         this.userRepository = userRepository;
         this.userService = userService;
+        this.jwtProvider = jwtProvider;
     }
 
     @GetMapping("role")
@@ -39,12 +45,26 @@ public class TestController
                              .map(GrantedAuthority::getAuthority).toList();
     }
 
+
     @GetMapping("user")
-    public ResponseEntity<?> getUserInfo(Authentication authentication)
+    public ResponseEntity<?> getUserInfo(Authentication authentication,
+                                         HttpServletRequest request)
     {
-        var user = userRepository.findByUsername(authentication.getName());
-        if ( user != null ) return ResponseEntity.ok(user);
-        return ResponseEntity.notFound().build();
+        try {
+            if(authentication.isAuthenticated()){
+                log.info("Found user in security context: " + authentication.getName());
+                var userId = userService.getUserIdFromRequest(request);
+                log.info("With userId: " + userId);
+                var user = userRepository.findById(userId);
+                return ResponseEntity.ok(user);
+            }
+            log.info("No user in current security context.");
+            return ResponseEntity.notFound().build();
+        }
+        catch ( Exception e ) {
+            log.error(e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("user/get-all")

@@ -20,6 +20,7 @@ public class CommonFn
         if ( !auth.isAuthenticated() ) throw new AuthenticationException("No authentication found");
     }
 
+
     public UUID stringToUUID(String str)
     {
         return UUID.fromString(str);

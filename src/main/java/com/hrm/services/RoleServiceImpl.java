@@ -26,7 +26,7 @@ public class RoleServiceImpl implements RoleService
 
     @Override
     @Async
-    @PreAuthorize(value = "hasRole('SYSADMIN')")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     public CompletableFuture<BaseResponse> createRole(String roleName)
     {
         if ( !roleName.startsWith("ROLE") ) roleName = "ROLE_" + roleName;
@@ -52,7 +52,7 @@ public class RoleServiceImpl implements RoleService
 
     @Override
     @Async
-    @PreAuthorize(value = "hasRole('SYSADMIN')")
+    @PreAuthorize(value = "hasRole('ADMIN')")
     public CompletableFuture<BaseResponse> addAuthorityToRole(Long roleId, Collection<Long> authorityIds)
     {
         var authorities = authorityRepository.findAllById(authorityIds);

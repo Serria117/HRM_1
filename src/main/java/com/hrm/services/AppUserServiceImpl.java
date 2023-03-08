@@ -1,5 +1,6 @@
 package com.hrm.services;
 
+import com.hrm.customExpeption.InvalidIdentityException;
 import com.hrm.entities.AppRole;
 import com.hrm.entities.AppUser;
 import com.hrm.payload.BaseResponse;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashSet;
@@ -53,10 +55,17 @@ public class AppUserServiceImpl implements AppUserService
         try {
             if ( userRepository.existByName(signUpDto.getUsername()) ) throw new RuntimeException("Username already taken");
             if ( userRepository.existByEmail(signUpDto.getEmail()) ) throw new RuntimeException("Email already taken");
+
             var roles = new HashSet<AppRole>();
-            for ( var roleId : signUpDto.getRoles() ) {
-                roles.add(roleRepository.getReferenceById(roleId));
+            if ( !signUpDto.getRoles().isEmpty() ) {
+                for ( var roleId : signUpDto.getRoles() ) {
+                    roles.add(roleRepository.getReferenceById(roleId));
+                }
             }
+            else {
+                roles.add(roleRepository.findByName("ROLE_EMPLOYEE"));
+            }
+
             var newUser = new AppUser()
                                   .setUsername(signUpDto.getUsername())
                                   .setEmail(signUpDto.getEmail())
@@ -215,6 +224,15 @@ public class AppUserServiceImpl implements AppUserService
         }
         return BaseResponse.error("Can not change password");
     }
+
+    public UUID getUserIdFromRequest(HttpServletRequest request) throws InvalidIdentityException
+    {
+        var authHeader = request.getHeader("Authorization");
+        if ( authHeader == null ) throw new InvalidIdentityException("No authorization");
+        var token = authHeader.substring(7);
+        return UUID.fromString(jwtProvider.getUserIdFromToken(token));
+    }
+
 
 //    private void sendVerificationCode(GuestSignUpDto signUpDto, HttpServletRequest request)
 //            throws ExecutionException, InterruptedException

@@ -19,7 +19,7 @@ public class Assignment extends BaseEntity
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(name = "task_user",
             joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "assign_by_id"))
+            inverseJoinColumns = @JoinColumn(name = "assign_to_id"))
     private Set<AppUser> assignTo = new LinkedHashSet<>();
 
     @ManyToOne @JoinColumn(name = "assign_by_id")

@@ -24,33 +24,40 @@ public class AppRequestFilter extends OncePerRequestFilter
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException
+                                    FilterChain filterChain)
+            throws ServletException, IOException
     {
         var header = request.getHeader("Authorization");
         try {
             if ( header != null && header.startsWith("Bearer ") ) {
                 var token = header.substring(7);
-//            log.info("Intercepted token: " + token);
+                log.info("Intercepted token: " + token);
                 var username = JWTProvider.getUsernameFromToken(token);
                 if ( username != null && SecurityContextHolder.getContext().getAuthentication() == null ) {
                     var userDetails = (AppUserDetails) userDetailsService.loadUserByUsername(username);
                     if ( JWTProvider.validateToken(token, userDetails) ) {
                         log.info("Token is valid");
-                        var usernamePasswordAuthentication = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                        var usernamePasswordAuthentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities());
                         usernamePasswordAuthentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthentication);
-                        log.info("Security context has been set");
+                        log.info("Security context available");
+                        log.info("Access to: [" + request.getRequestURI() + "] with valid token");
                     }
                     else {
-                        log.error("Token is not valid");
+                        log.warn("Token is not valid");
                     }
                 }
             }
         }
         catch ( Exception e ) {
-            log.warn(e.getMessage());
+            log.error(e.getMessage());
         }
-        filterChain.doFilter(request, response);
+        finally {
+            filterChain.doFilter(request, response);
+        }
     }
 }

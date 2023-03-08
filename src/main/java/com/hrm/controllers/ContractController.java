@@ -1,6 +1,6 @@
 package com.hrm.controllers;
 
-import com.baseapp.services.contract.ContractService;
+import com.hrm.services.ContractServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,10 +11,11 @@ import reactor.util.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@RestController @RequiredArgsConstructor @RequestMapping("/contract")
+@RestController @RequiredArgsConstructor
+@RequestMapping("/contract")
 public class ContractController
 {
-    private ContractService contractService;
+    private ContractServiceImpl contractService;
 
     @PostMapping("add")
     public void addNewContract(UUID userId,
