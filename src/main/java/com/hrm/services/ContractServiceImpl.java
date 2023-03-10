@@ -66,35 +66,27 @@ public class ContractServiceImpl
     public BaseResponse createNewContractOfUser(LaborContractRequest lbContractRequest, Authentication authentication)
     {
         try {
-            var userExist = userRepository.findById(lbContractRequest.getUserId()).orElse(null);
-            if ( userExist == null ) {
-                throw new RuntimeException("User not found by id: " + lbContractRequest.getUserId());
-            }
-            else {
-                var lbCurrentContract = laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).orElse(null);
-                if ( lbCurrentContract != null ) {
-                    lbCurrentContract.setIsActivated(false);
-                    laborContractRepository.save(lbCurrentContract);
-                }
-                /*laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).ifPresent(s -> {
-                    s.setIsActivated(false);
-                    laborContractRepository.save(s);
-                });*/
+            var userExist = userRepository.findById(lbContractRequest.getUserId())
+                                          .orElseThrow(() -> new RuntimeException("User not found by id: " + lbContractRequest.getUserId()));
+            var lbCurrentContract = laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).orElse(null);
+            if ( lbCurrentContract != null ) {
+                lbCurrentContract.setIsActivated(false);
+                laborContractRepository.save(lbCurrentContract);
             }
 
-            var newContractOfUser = new LaborContract()
-                                            .setId(lbContractRequest.getId())
-                                            .setContractNumber(lbContractRequest.getContractNumber())
-                                            .setUserId(lbContractRequest.getUserId())
-                                            .setContractTypeId(lbContractRequest.getContractTypeId())
-                                            .setBasicSalary(lbContractRequest.getBasicSalary())
-                                            .setStartDate(lbContractRequest.getStartDate())
-                                            .setEndDate(lbContractRequest.getEndDate());
-            newContractOfUser.setCreation(authentication);
+            var newContract = new LaborContract()
+                                      .setId(lbContractRequest.getId())
+                                      .setContractNumber(lbContractRequest.getContractNumber())
+                                      .setUserId(lbContractRequest.getUserId())
+                                      .setContractTypeId(lbContractRequest.getContractTypeId())
+                                      .setBasicSalary(lbContractRequest.getBasicSalary())
+                                      .setStartDate(lbContractRequest.getStartDate())
+                                      .setEndDate(lbContractRequest.getEndDate());
+            newContract.setCreation(authentication);
 
-            var contractCreate = laborContractRepository.save(newContractOfUser);
+            var savedContract = laborContractRepository.save(newContract);
             LOGGER.info("Create contract success!");
-            return BaseResponse.success(contractCreate);
+            return BaseResponse.success(savedContract);
         }
         catch ( Exception ex ) {
             LOGGER.error("Create contractOfUser fail", ex);
