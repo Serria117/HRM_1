@@ -46,8 +46,9 @@ public class ContractController {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateContract(@RequestParam Long lbContractId, @RequestParam Double baseSalary, Authentication authentication){
-        var res = contractService.updateContract(lbContractId, baseSalary, authentication);
-        return res ? ResponseEntity.ok("Update contract success!") :ResponseEntity.badRequest().body(false);
+    public ResponseEntity<?> updateContract(@RequestBody LaborContractRequest request,
+                                            Authentication authentication){
+        var res = contractService.updateContract(request, authentication);
+        return ResponseEntity.ok(res);
     }
 }

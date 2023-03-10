@@ -103,30 +103,21 @@ public class ContractServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateContract(Long lbContractId, Double baseSalary, Authentication authentication)
+    public BaseResponse updateContract(LaborContractRequest request, Authentication authentication)
     {
         try {
-            var objExits = laborContractRepository.findById(lbContractId);
-            if ( objExits.isEmpty() ) {
-                LOGGER.warn("Contract does not exist!");
-            }
-            else {
-                var objRequest = new LaborContractRequest()
-                                         .setId(objExits.get().getId())
-                                         .setBasicSalary(baseSalary);
+            var foundContract = laborContractRepository.findById(request.getId())
+                                                       .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
+            foundContract.setBasicSalary(request.getBasicSalary())
+                         .setEndDate(request.getEndDate());
 
-                var objData = new LaborContract()
-                                      .setId(objRequest.getId())
-                                      .setBasicSalary(objRequest.getBasicSalary());
-                objData.setModification(authentication);
-
-                laborContractRepository.save(objData);
-            }
+            var savedContract = laborContractRepository.save(foundContract);
+            return BaseResponse.success("Contract [" + savedContract.getContractNumber() + "] updated successfully");
         }
         catch ( Exception ex ) {
             LOGGER.error("Update contract of user fail", ex);
+            return BaseResponse.error(ex.getMessage());
         }
-        return false;
     }
 
     @Transactional(rollbackFor = Exception.class)
