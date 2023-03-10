@@ -22,7 +22,7 @@ public interface DepartmentRepository extends JpaRepository<Department, Long>
     @Query(nativeQuery = true,
     value = "SELECT dp.id as id, dp.departmentName as name, u.username as username " +
                     "FROM department as dp INNER JOIN user as u " +
-                    "WHERE dp.mng_user_id = u.id")
+                    "WHERE dp.mng_user_id = u.id AND dp.isActivated = true AND dp.isDeleted = false")
     List<DepartmentViewDto> viewAllAsDto();
 
 }
