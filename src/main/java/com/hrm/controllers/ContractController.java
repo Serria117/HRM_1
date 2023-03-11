@@ -1,11 +1,11 @@
 package com.hrm.controllers;
 
 import com.hrm.configurations.SwaggerConfig;
+import com.hrm.payload.BaseResponse;
 import com.hrm.payload.LaborContractRequest;
 import com.hrm.services.ContractServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,21 +22,18 @@ public class ContractController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> contractDetail(@PathVariable(name = "id") Long lbContractId){
-        var obj = contractService.contractViewDetail(lbContractId);
-        return ResponseEntity.ok(obj);
+    public BaseResponse contractDetail(@PathVariable(name = "id") Long lbContractId){
+        return contractService.contractViewDetail(lbContractId);
     }
 
     @PostMapping("/add-new")
-    public ResponseEntity<?> createNewContract(@RequestBody LaborContractRequest lbContractRequest, Authentication authentication){
-        var res = contractService.createNewContract(lbContractRequest, authentication);
-        return res != null ? ResponseEntity.ok("Create contract success!") : ResponseEntity.badRequest().body(res);
+    public BaseResponse createNewContract(@RequestBody LaborContractRequest lbContractRequest, Authentication authentication){
+        return contractService.createNewContract(lbContractRequest, authentication);
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateContract(@RequestBody LaborContractRequest request,
+    public BaseResponse updateContract(@RequestBody LaborContractRequest request,
                                             Authentication authentication){
-        var res = contractService.updateContract(request, authentication);
-        return ResponseEntity.ok(res);
+        return contractService.updateContract(request, authentication);
     }
 }

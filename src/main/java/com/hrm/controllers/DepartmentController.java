@@ -1,5 +1,6 @@
 package com.hrm.controllers;
 
+import com.hrm.payload.BaseResponse;
 import com.hrm.payload.DepartmentRequest;
 import com.hrm.services.DepartmentServiceImpl;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +20,14 @@ public class DepartmentController {
     }
 
     @PostMapping("add-new")
-    public ResponseEntity<?> createNewDepartment(DepartmentRequest dpmRequest, Authentication authentication){
-        var res = departmentService.createDepartment(dpmRequest, authentication);
-        return res.getSucceed() ? ResponseEntity.ok(res) : ResponseEntity.badRequest().body(res);
+    public BaseResponse createNewDepartment(DepartmentRequest dpmRequest, Authentication authentication){
+        return departmentService.createDepartment(dpmRequest, authentication);
+    }
+
+    @PostMapping("update")
+    public BaseResponse updateDepartment(DepartmentRequest request, Authentication authentication)
+    {
+        return departmentService.updateDepartment(request, authentication);
     }
 
     @PostMapping("change-mng-user")
