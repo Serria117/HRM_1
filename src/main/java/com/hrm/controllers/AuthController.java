@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController
@@ -27,9 +29,9 @@ public class AuthController
     }
 
     @PostMapping("sign-in")
-    public ResponseEntity<?> signIn(@RequestBody SignInDto signInDto)
+    public ResponseEntity<?> signIn(@RequestBody SignInDto signInDto, HttpServletRequest req)
     {
-        var res = userService.signIn(signInDto);
+        var res = userService.signIn(signInDto, req);
         return res.getSucceed()
                ? ResponseEntity.ok(res)
                : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);

@@ -7,12 +7,14 @@ import com.hrm.payload.userdto.SignUpDto;
 import com.hrm.payload.userdto.TokenResponse;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
+
 public interface AppUserService
 {
     @Transactional(rollbackFor = Exception.class)
     BaseResponse signUp(SignUpDto signUpDto);
 
-    TokenResponse signIn(SignInDto signInDto);
+    TokenResponse signIn(SignInDto signInDto, HttpServletRequest req);
 
     RefreshToken createRefreshToken();
 

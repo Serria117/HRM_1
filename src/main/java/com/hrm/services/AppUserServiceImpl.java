@@ -20,11 +20,14 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashSet;
@@ -160,7 +163,7 @@ public class AppUserServiceImpl implements AppUserService
     }
 
     @Override
-    public TokenResponse signIn(SignInDto signInDto)
+    public TokenResponse signIn(SignInDto signInDto, HttpServletRequest req)
     {
         try {
             var auth = authenticationManager.authenticate(
@@ -172,13 +175,20 @@ public class AppUserServiceImpl implements AppUserService
                 var token = JWTProvider.createToken(userDetails);
                 var refreshToken = createRefreshToken();
                 updateRefreshToken(signInDto.getUsername(), refreshToken);
-                return new TokenResponse().setUsername(signInDto.getUsername())
-                                          .setUserId(userDetails.getUserId())
-                                          .setAccessToken(token)
-                                          .setRefreshToken(refreshToken.getToken())
-                                          .setExpiration(JWTProvider.getExpiration(token))
-                                          .setCode("200")
-                                          .setMessage("Successfully logged in");
+                return new TokenResponse()
+                               .setLoginIP(req.getRemoteAddr())
+                               .setUsername(signInDto.getUsername())
+                               .setUserId(userDetails.getUserId())
+                               .setRoles(userDetails.getRoles().stream()
+                                                    .map(SimpleGrantedAuthority::getAuthority).toList())
+                               .setAuthorities(userDetails.getAuthorities().stream()
+                                                          .map(GrantedAuthority::getAuthority)
+                                                          .filter(authority -> !authority.contains("ROLE_")).toList())
+                               .setAccessToken(token)
+                               .setRefreshToken(refreshToken.getToken())
+                               .setExpiration(JWTProvider.getExpiration(token))
+                               .setCode("200")
+                               .setMessage("Successfully logged in");
             }
             return new TokenResponse().setMessage("Bad credential")
                                       .setSucceed(false)
@@ -265,7 +275,8 @@ public class AppUserServiceImpl implements AppUserService
 //        emailService.sendFormattedEmail(message).get();
 //    }
 
-    public UserDto convertUserToDto(AppUser appUser){
+    public UserDto convertUserToDto(AppUser appUser)
+    {
         UserDto userDto = new UserDto();
         userDto.setId(appUser.getId());
         userDto.setUsername(appUser.getUsername());
@@ -276,7 +287,7 @@ public class AppUserServiceImpl implements AppUserService
         userDto.setBankAccount(appUser.getBankAccount());
         userDto.setBankFullName(appUser.getBankFullName());
         userDto.setBankShortName(appUser.getBankShortName());
-        return  userDto;
+        return userDto;
     }
 
     public BaseResponse getAllUser(Integer page, Integer size)
@@ -286,7 +297,8 @@ public class AppUserServiceImpl implements AppUserService
         return BaseResponse.success(res);
     }
 
-    public UserDto getUser(UUID id) throws Exception {
+    public UserDto getUser(UUID id) throws Exception
+    {
         var user = userRepository.findById(id).map(this::convertUserToDto).orElseThrow(() -> new Exception("User not found"));
         return user;
     }

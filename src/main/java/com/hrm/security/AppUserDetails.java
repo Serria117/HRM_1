@@ -44,7 +44,7 @@ public class AppUserDetails implements UserDetails
         return authorities;
     }
 
-    private Collection<SimpleGrantedAuthority> getRoles()
+    public Collection<SimpleGrantedAuthority> getRoles()
     {
         return currentUser.getRoles()
                           .stream()

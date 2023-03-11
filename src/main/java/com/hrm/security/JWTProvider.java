@@ -29,7 +29,7 @@ public class JWTProvider
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private Collection<String> getAuthorityFromUser(UserDetails userDetails)
+    private Collection<String> getAuthorityFromUser(AppUserDetails userDetails)
     {
         return userDetails.getAuthorities().stream()
                           .map(GrantedAuthority::getAuthority)
@@ -37,7 +37,7 @@ public class JWTProvider
                           .collect(Collectors.toList());
     }
 
-    private Collection<String> getRoleFromUser(UserDetails userDetails)
+    private Collection<String> getRoleFromUser(AppUserDetails userDetails)
     {
         return userDetails.getAuthorities().stream()
                           .map(GrantedAuthority::getAuthority)
@@ -54,11 +54,12 @@ public class JWTProvider
         return claimResolver.apply(claims);
     }
 
-    public String createToken(UserDetails userDetails)
+    public String createToken(AppUserDetails userDetails)
     {
         var claims = new HashMap<String, Object>();
         claims.put("roles", getRoleFromUser(userDetails));
-        claims.put("authority", getAuthorityFromUser(userDetails));
+        claims.put("authorities", getAuthorityFromUser(userDetails));
+        claims.put("id", userDetails.getUserId());
         var now = new Date(System.currentTimeMillis());
         return Jwts.builder()
                    .setClaims(claims)
