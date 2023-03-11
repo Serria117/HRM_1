@@ -12,7 +12,7 @@ public interface LaborContractRepository extends JpaRepository<LaborContract, Lo
     @Query(nativeQuery = true,
     value = "select * from labor_contract l " +
                     "inner join user u on l.user_id = u.id" +
-                    "where u.id = ?1 and l.is_activated = ?2")
+                    "where u.id = ?1 and l.isActivated = ?2")
     Optional<LaborContract> findByCurrentContract(UUID userId, Boolean isActivated);
 
 }

@@ -16,8 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 @Service @Slf4j
 @RequiredArgsConstructor
 public class ContractServiceImpl
@@ -27,18 +25,6 @@ public class ContractServiceImpl
     private final ContractTypeRepository contractTypeRepository;
     private final AppUserServiceImpl userService;
     private final UserRepository userRepository;
-
-    @Transactional(rollbackFor = Exception.class)
-    public LaborContract createNewContract(UUID userId,
-                                           Long contractTypeId,
-                                           Authentication authentication)
-    {
-        var newContract = new LaborContract().setUserId(userId)
-                                             .setContractTypeId(contractTypeId);
-        newContract.setCreation(authentication);
-
-        return laborContractRepository.save(newContract);
-    }
 
     @Transactional(rollbackFor = Exception.class)
     public BaseResponse createNewContract(LaborContractRequest lbContractRequest,
@@ -70,8 +56,6 @@ public class ContractServiceImpl
             return BaseResponse.error(e.getMessage());
         }
     }
-
-
 
     @Transactional(rollbackFor = Exception.class)
     public BaseResponse updateContract(LaborContractRequest request,
@@ -120,6 +104,22 @@ public class ContractServiceImpl
         catch ( Exception ex ) {
             LOGGER.error("Contract view detail fail:", ex);
             return BaseResponse.error(ex.getMessage());
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse deleteContract(Long id)
+    {
+        try {
+            var foundContract = laborContractRepository.findById(id)
+                                        .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
+            foundContract.setIsActivated(false);
+            foundContract.setIsDeleted(true);
+
+            return BaseResponse.success(foundContract);
+        }
+        catch ( Exception e ) {
+            return BaseResponse.error(e.getMessage());
         }
     }
 }
