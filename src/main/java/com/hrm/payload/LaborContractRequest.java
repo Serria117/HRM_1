@@ -13,6 +13,7 @@ public class LaborContractRequest implements Serializable {
     private String contractNumber;
     private Double basicSalary;
     private UUID userId;
+    private Boolean isActivated;
     private Long contractTypeId;
     private LocalDate startDate;
     private LocalDate endDate;

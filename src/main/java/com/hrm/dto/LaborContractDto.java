@@ -10,11 +10,11 @@ import java.time.LocalDate;
 @AllArgsConstructor @NoArgsConstructor
 public class LaborContractDto implements Serializable {
     private Long id;
-    private String contractOfUser;
+    private String fullName;
     private String contractNumber;
     private String contractTypeName;
-    private String emailOfUser;
-    private String phoneOfUser;
+    private String email;
+    private String phone;
     private LocalDate startDate;
     private LocalDate endDate;
 }

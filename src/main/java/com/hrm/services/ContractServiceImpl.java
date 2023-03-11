@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Example;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,10 +45,18 @@ public class ContractServiceImpl
                                           Authentication authentication)
     {
         try {
+            if ( !userRepository.existsById(lbContractRequest.getUserId()) ) {throw new RuntimeException("User id not found");}
+
+            Example<LaborContract> exampleContract =
+                    Example.of((LaborContract) new LaborContract()
+                                                       .setUserId(lbContractRequest.getUserId())
+                                                       .setIsActivated(true));
+            laborContractRepository.findOne(exampleContract)
+                                   .ifPresent(c -> c.setIsActivated(false));
+
             var newContract = new LaborContract()
                                       .setUserId(lbContractRequest.getUserId())
                                       .setContractNumber(lbContractRequest.getContractNumber())
-                                      .setUserId(lbContractRequest.getUserId())
                                       .setContractTypeId(lbContractRequest.getContractTypeId())
                                       .setBasicSalary(lbContractRequest.getBasicSalary())
                                       .setStartDate(lbContractRequest.getStartDate())
@@ -62,69 +71,25 @@ public class ContractServiceImpl
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResponse createNewContractOfUser(LaborContractRequest lbContractRequest, Authentication authentication)
-    {
-        try {
-            var userExist = userRepository.findById(lbContractRequest.getUserId())
-                                          .orElseThrow(() -> new RuntimeException("User not found by id: " + lbContractRequest.getUserId()));
-            var lbCurrentContract = laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).orElse(null);
-            if ( lbCurrentContract != null ) {
-                lbCurrentContract.setIsActivated(false);
-                laborContractRepository.save(lbCurrentContract);
-            }
 
-            var newContract = new LaborContract()
-                                      .setId(lbContractRequest.getId())
-                                      .setContractNumber(lbContractRequest.getContractNumber())
-                                      .setUserId(lbContractRequest.getUserId())
-                                      .setContractTypeId(lbContractRequest.getContractTypeId())
-                                      .setBasicSalary(lbContractRequest.getBasicSalary())
-                                      .setStartDate(lbContractRequest.getStartDate())
-                                      .setEndDate(lbContractRequest.getEndDate());
-            newContract.setCreation(authentication);
-
-            var savedContract = laborContractRepository.save(newContract);
-            LOGGER.info("Create contract success!");
-            return BaseResponse.success(savedContract);
-        }
-        catch ( Exception ex ) {
-            LOGGER.error("Create contractOfUser fail", ex);
-            return BaseResponse.error(ex.getMessage());
-        }
-    }
 
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse updateContract(LaborContractRequest request, Authentication authentication)
+    public BaseResponse updateContract(LaborContractRequest request,
+                                       Authentication authentication)
     {
         try {
-            var foundContract = laborContractRepository.findById(request.getId())
-                                                       .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
+            var foundContract = laborContractRepository
+                                        .findById(request.getId())
+                                        .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
             foundContract.setBasicSalary(request.getBasicSalary())
-                         .setEndDate(request.getEndDate());
-
-            var savedContract = laborContractRepository.save(foundContract);
-            return BaseResponse.success("Contract [" + savedContract.getContractNumber() + "] updated successfully");
-        }
-        catch ( Exception ex ) {
-            LOGGER.error("Update contract of user fail", ex);
-            return BaseResponse.error(ex.getMessage());
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResponse changeStatusContract(Long lbContactId, Authentication authentication)
-    {
-        try {
-            var foundContract = laborContractRepository.findById(lbContactId)
-                                                       .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
-            foundContract.setIsActivated(false);
+                         .setEndDate(request.getEndDate())
+                         .setIsActivated(request.getIsActivated());
             foundContract.setModification(authentication);
-            laborContractRepository.save(foundContract);
-            return BaseResponse.success();
+            //var savedContract = laborContractRepository.save(foundContract);
+            return BaseResponse.success(foundContract);
         }
         catch ( Exception ex ) {
-            LOGGER.error("Change status contract fail!", ex);
+            LOGGER.error(ex.getMessage());
             return BaseResponse.error(ex.getMessage());
         }
     }
@@ -135,17 +100,19 @@ public class ContractServiceImpl
             var foundContract = laborContractRepository
                                         .findById(lbContractId)
                                         .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
-            var user = userRepository.getReferenceById(foundContract.getUserId());
-
+            var user = userRepository
+                               .findById(foundContract.getUserId())
+                               .orElseThrow(() -> new RuntimeException("Invalid employee"));
+            var contractType = contractTypeRepository
+                                       .findById(foundContract.getContractTypeId())
+                                       .orElseThrow(() -> new RuntimeException("Invalid contract type"));
             var contractDto =
                     new LaborContractDto().setId(foundContract.getId())
                                           .setContractNumber(foundContract.getContractNumber())
-                                          .setContractOfUser(user.getFullName())
-                                          .setContractTypeName(contractTypeRepository
-                                                                       .getReferenceById(foundContract.getContractTypeId())
-                                                                       .getTypeName())
-                                          .setEmailOfUser(user.getEmail())
-                                          .setPhoneOfUser(user.getPhone())
+                                          .setFullName(user.getFullName())
+                                          .setContractTypeName(contractType.getTypeName())
+                                          .setEmail(user.getEmail())
+                                          .setPhone(user.getPhone())
                                           .setStartDate(foundContract.getStartDate())
                                           .setEndDate(foundContract.getEndDate());
             return BaseResponse.success(contractDto);

@@ -21,12 +21,6 @@ public class ContractController {
         this.contractService = contractService;
     }
 
-    /*@PostMapping("create")
-    public ResponseEntity<?> createNewContract(@RequestBody UUID ){
-
-        *//*return contractService.createNewContract(request.getId(), )*//*
-    }*/
-
     @GetMapping("/{id}")
     public ResponseEntity<?> contractDetail(@PathVariable(name = "id") Long lbContractId){
         var obj = contractService.contractViewDetail(lbContractId);
@@ -37,12 +31,6 @@ public class ContractController {
     public ResponseEntity<?> createNewContract(@RequestBody LaborContractRequest lbContractRequest, Authentication authentication){
         var res = contractService.createNewContract(lbContractRequest, authentication);
         return res != null ? ResponseEntity.ok("Create contract success!") : ResponseEntity.badRequest().body(res);
-    }
-
-    @PostMapping("/add-new-user-contract")
-    public ResponseEntity<?> createNewContractOfUser(@RequestBody LaborContractRequest lbContractRequest, Authentication authentication){
-        var res = contractService.createNewContractOfUser(lbContractRequest, authentication);
-        return res.getSucceed() ? ResponseEntity.ok(res) : ResponseEntity.badRequest().body(res);
     }
 
     @PostMapping("/update")
