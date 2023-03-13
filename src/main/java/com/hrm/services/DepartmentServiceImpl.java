@@ -42,8 +42,8 @@ public class DepartmentServiceImpl {
                     .setDepartmentName(dpmRequest.getDepartmentName())
                     .setDepartmentCode(dpmRequest.getDepartmentCode());*/
 
-            if (departmentRepository.existsDepartmentByName(dpmRequest.getDepartmentName()))
-                throw  new RuntimeException("Department name already exist!");
+            if (!departmentRepository.existsDepartmentByName(dpmRequest.getDepartmentName()))
+                throw new RuntimeException("Department name already exist!");
 
             var objData = new Department()
                     .setId(dpmRequest.getId())
@@ -73,9 +73,11 @@ public class DepartmentServiceImpl {
             if (userExist == null) {
                 throw new RuntimeException("User not found by id: " + dpmRequest.getUserId());
             } else {
-                dpmExist.setManagementUser(userExist);
+                dpmExist.setManagementUser(userExist)
+                        .setDepartmentName(dpmRequest.getDepartmentName())
+                        .setDepartmentCode(dpmRequest.getDepartmentCode())
+                        .setModification(authentication);
             }
-            dpmExist.setModification(authentication);
 
             var dpmUpdate = departmentRepository.save(dpmExist);
             LOGGER.info("Update department success!");

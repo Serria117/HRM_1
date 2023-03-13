@@ -21,18 +21,24 @@ public class DepartmentController {
     @PostMapping("add-new")
     public ResponseEntity<?> createNewDepartment(DepartmentRequest dpmRequest, Authentication authentication){
         var res = departmentService.createDepartment(dpmRequest, authentication);
-        return res.getSucceed() ? ResponseEntity.ok(res) : ResponseEntity.badRequest().body(res);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
     }
 
     @PostMapping("change-mng-user")
     public ResponseEntity<?> updateDepartment(@RequestParam Long dpmId, @RequestParam UUID mngUserId, Authentication authentication){
         var res = departmentService.changeUserManagerOfDepartment(dpmId, mngUserId, authentication);
-        return res.getSucceed() ? ResponseEntity.ok(res) : ResponseEntity.badRequest().body(res);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
     }
 
     @GetMapping("department-detail/{id}")
     public ResponseEntity<?> departmentViewDetail(@PathVariable(name = "id") Long dpmId){
         var res = departmentService.viewDetailDepartment(dpmId);
-        return res.getSucceed() ? ResponseEntity.ok(res) : ResponseEntity.badRequest().body(res);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
     }
 }

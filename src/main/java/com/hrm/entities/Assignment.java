@@ -2,12 +2,14 @@ package com.hrm.entities;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Getter @Setter @Entity @Table(name = "assignment")
+@Getter @Setter @Accessors(chain = true)
+@Entity @Table(name = "assignment")
 public class Assignment extends BaseEntity
 {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

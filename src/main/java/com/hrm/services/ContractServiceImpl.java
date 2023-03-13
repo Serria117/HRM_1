@@ -1,6 +1,6 @@
 package com.hrm.services;
 
-import com.hrm.dto.LaborContractDto;
+import com.hrm.dto.laborContract.LaborContractDto;
 import com.hrm.entities.LaborContract;
 import com.hrm.payload.BaseResponse;
 import com.hrm.payload.LaborContractRequest;
@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,11 @@ public class ContractServiceImpl
         newContract.setCreation(authentication);
 
         return laborContractRepository.save(newContract);
+    }
+
+    public BaseResponse getListLbContract(Integer page, Integer size){
+        var lbContract = laborContractRepository.getAllContractNonDeleted(PageRequest.of(page, size));
+        return BaseResponse.success(lbContract);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -71,15 +77,12 @@ public class ContractServiceImpl
                 throw new RuntimeException("User not found by id: " + lbContractRequest.getUserId());
             }
             else {
-                var lbCurrentContract = laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).orElse(null);
+                var lbCurrentContract = laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true)
+                        .orElse(null);
                 if ( lbCurrentContract != null ) {
                     lbCurrentContract.setIsActivated(false);
                     laborContractRepository.save(lbCurrentContract);
                 }
-                /*laborContractRepository.findByCurrentContract(lbContractRequest.getUserId(), true).ifPresent(s -> {
-                    s.setIsActivated(false);
-                    laborContractRepository.save(s);
-                });*/
             }
 
             var newContractOfUser = new LaborContract()
@@ -103,30 +106,24 @@ public class ContractServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateContract(Long lbContractId, Double baseSalary, Authentication authentication)
+    public BaseResponse updateContract(Long lbContractId, Double baseSalary, Authentication authentication)
     {
         try {
-            var objExits = laborContractRepository.findById(lbContractId);
-            if ( objExits.isEmpty() ) {
-                LOGGER.warn("Contract does not exist!");
-            }
-            else {
-                var objRequest = new LaborContractRequest()
-                                         .setId(objExits.get().getId())
-                                         .setBasicSalary(baseSalary);
+            var objExits = laborContractRepository.findById(lbContractId)
+                    .orElseThrow(() -> new RuntimeException("Invalid contract id!"));
 
-                var objData = new LaborContract()
-                                      .setId(objRequest.getId())
-                                      .setBasicSalary(objRequest.getBasicSalary());
-                objData.setModification(authentication);
+            objExits.setId(lbContractId);
+            objExits.setBasicSalary(baseSalary);
+            objExits.setModification(authentication);
 
-                laborContractRepository.save(objData);
-            }
+            laborContractRepository.save(objExits);
+            LOGGER.info("Update contract successfully!");
+            return BaseResponse.success();
         }
         catch ( Exception ex ) {
             LOGGER.error("Update contract of user fail", ex);
+            return BaseResponse.error(ex.getMessage());
         }
-        return false;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -146,6 +143,25 @@ public class ContractServiceImpl
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse deleteContract(Long lbContractId, Authentication authentication){
+        try {
+            var foundContract = laborContractRepository.findById(lbContractId)
+                    .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
+
+            foundContract.setIsDeleted(true);
+            foundContract.setModification(authentication);
+
+            laborContractRepository.save(foundContract);
+            LOGGER.info("Delete contract successfully!");
+
+            return BaseResponse.success();
+        } catch (Exception ex){
+            LOGGER.error("Delete contract fail!");
+            return BaseResponse.error(ex.getMessage());
+        }
+    }
+
     public BaseResponse contractViewDetail(Long lbContractId)
     {
         try {
@@ -155,14 +171,14 @@ public class ContractServiceImpl
             var user = userRepository.getReferenceById(foundContract.getUserId());
 
             var contractDto =
-                    new LaborContractDto().setId(foundContract.getId())
-                                          .setContractNumber(foundContract.getContractNumber())
-                                          .setContractOfUser(user.getFullName())
-                                          .setContractTypeName(contractTypeRepository
+                    new LaborContractDto().setLbId(foundContract.getId())
+                                          .setLbNumber(foundContract.getContractNumber())
+                                          .setLbUserName(user.getFullName())
+                                          .setLbTypeName(contractTypeRepository
                                                                        .getReferenceById(foundContract.getContractTypeId())
                                                                        .getTypeName())
-                                          .setEmailOfUser(user.getEmail())
-                                          .setPhoneOfUser(user.getPhone())
+                                          .setLbUserEmail(user.getEmail())
+                                          .setLbUserPhone(user.getPhone())
                                           .setStartDate(foundContract.getStartDate())
                                           .setEndDate(foundContract.getEndDate());
             return BaseResponse.success(contractDto);
@@ -171,5 +187,10 @@ public class ContractServiceImpl
             LOGGER.error("Contract view detail fail:", ex);
             return BaseResponse.error(ex.getMessage());
         }
+    }
+
+    public BaseResponse testCurrentContract(UUID userId){
+        var res = laborContractRepository.findByCurrentContract(userId, true);
+        return BaseResponse.success(res);
     }
 }

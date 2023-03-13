@@ -266,17 +266,15 @@ public class AppUserServiceImpl implements AppUserService
 //    }
 
     public UserDto convertUserToDto(AppUser appUser){
-        UserDto userDto = new UserDto();
-        userDto.setId(appUser.getId());
-        userDto.setUsername(appUser.getUsername());
-        userDto.setFullName(appUser.getFullName());
-        userDto.setEmail(appUser.getEmail());
-        userDto.setPhone(appUser.getPhone());
-        userDto.setAddress(appUser.getAddress());
-        userDto.setBankAccount(appUser.getBankAccount());
-        userDto.setBankFullName(appUser.getBankFullName());
-        userDto.setBankShortName(appUser.getBankShortName());
-        return  userDto;
+        return new UserDto()
+        .setUsername(appUser.getUsername())
+        .setFullName(appUser.getFullName())
+        .setEmail(appUser.getEmail())
+        .setPhone(appUser.getPhone())
+        .setAddress(appUser.getAddress())
+        .setBankAccount(appUser.getBankAccount())
+        .setBankFullName(appUser.getBankFullName())
+        .setBankShortName(appUser.getBankShortName());
     }
 
     public BaseResponse getAllUser(Integer page, Integer size)
@@ -287,7 +285,6 @@ public class AppUserServiceImpl implements AppUserService
     }
 
     public UserDto getUser(UUID id) throws Exception {
-        var user = userRepository.findById(id).map(this::convertUserToDto).orElseThrow(() -> new Exception("User not found"));
-        return user;
+        return userRepository.findById(id).map(this::convertUserToDto).orElseThrow(() -> new Exception("User not found"));
     }
 }
