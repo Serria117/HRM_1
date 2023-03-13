@@ -9,7 +9,7 @@ import javax.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 
 @MappedSuperclass @Getter @Setter @Accessors(chain = true)
-public abstract class   BaseEntity
+public abstract class BaseEntity
 {
     protected Boolean isActivated = true;
     protected Boolean isDeleted = false;

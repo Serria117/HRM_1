@@ -163,10 +163,9 @@ public class AppUserServiceImpl implements AppUserService
     }
 
     @Override
-    public CompletableFuture<TokenResponse> signIn(SignInDto signInDto, HttpServletRequest req)
+    public TokenResponse signIn(SignInDto signInDto)
     {
         try {
-            var tokenResponse = new TokenResponse();
             var auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             signInDto.getUsername(),
@@ -176,32 +175,22 @@ public class AppUserServiceImpl implements AppUserService
                 var token = JWTProvider.createToken(userDetails);
                 var refreshToken = createRefreshToken();
                 updateRefreshToken(signInDto.getUsername(), refreshToken);
-                tokenResponse.setLoginIP(req.getRemoteAddr())
-                             .setUsername(signInDto.getUsername())
-                             .setUserId(userDetails.getUserId())
-                             .setRoles(userDetails.getRoles().stream()
-                                                  .map(SimpleGrantedAuthority::getAuthority).toList())
-                             .setAuthorities(userDetails.getAuthorities().stream()
-                                                        .map(GrantedAuthority::getAuthority)
-                                                        .filter(authority -> !authority.contains("ROLE_")).toList())
-                             .setAccessToken(token)
-                             .setRefreshToken(refreshToken.getToken())
-                             .setExpiration(JWTProvider.getExpiration(token))
-                             .setCode("200")
-                             .setMessage("Successfully logged in");
-            } else {
-                tokenResponse.setMessage("Bad credential")
-                             .setSucceed(false)
-                             .setCode("401");
+                return new TokenResponse().setUsername(signInDto.getUsername())
+                                          .setUserId(userDetails.getUserId())
+                                          .setAccessToken(token)
+                                          .setRefreshToken(refreshToken.getToken())
+                                          .setExpiration(JWTProvider.getExpiration(token))
+                                          .setCode("200")
+                                          .setMessage("Successfully logged in");
             }
-            return CompletableFuture.completedFuture(tokenResponse);
+            return new TokenResponse().setMessage("Bad credential")
+                                      .setSucceed(false)
+                                      .setCode("401");
         }
         catch ( Exception e ) {
-            log.error(e.getMessage());
-            e.printStackTrace();
-            return CompletableFuture.completedFuture(new TokenResponse().setSucceed(false)
-                                                                        .setCode("500")
-                                                                        .setMessage("Internal server error"));
+            return new TokenResponse().setMessage(e.getMessage())
+                                      .setSucceed(false)
+                                      .setCode("401");
         }
     }
 

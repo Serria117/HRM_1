@@ -1,21 +1,15 @@
 package com.hrm.controllers;
 
-import com.hrm.configurations.SwaggerConfig;
-import com.hrm.payload.BaseResponse;
 import com.hrm.payload.DepartmentRequest;
 import com.hrm.services.DepartmentServiceImpl;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("api/department")
-@SecurityRequirement(name = SwaggerConfig.SECURITY_NAME)
 public class DepartmentController {
 
     private final DepartmentServiceImpl departmentService;

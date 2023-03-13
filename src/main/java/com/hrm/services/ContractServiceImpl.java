@@ -43,6 +43,7 @@ public class ContractServiceImpl
             var newContract = new LaborContract()
                                       .setUserId(lbContractRequest.getUserId())
                                       .setContractNumber(lbContractRequest.getContractNumber())
+                                      .setUserId(lbContractRequest.getUserId())
                                       .setContractTypeId(lbContractRequest.getContractTypeId())
                                       .setBasicSalary(lbContractRequest.getBasicSalary())
                                       .setStartDate(lbContractRequest.getStartDate())
@@ -69,11 +70,11 @@ public class ContractServiceImpl
                          .setEndDate(request.getEndDate())
                          .setIsActivated(request.getIsActivated());
             foundContract.setModification(authentication);
-            //var savedContract = laborContractRepository.save(foundContract);
-            return BaseResponse.success(foundContract);
+            laborContractRepository.save(foundContract);
+            return BaseResponse.success();
         }
         catch ( Exception ex ) {
-            LOGGER.error(ex.getMessage());
+            LOGGER.error("Change status contract fail!", ex);
             return BaseResponse.error(ex.getMessage());
         }
     }
