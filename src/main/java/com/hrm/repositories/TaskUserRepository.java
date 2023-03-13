@@ -25,7 +25,8 @@ public interface TaskUserRepository extends JpaRepository<Assignment, Long>
     List<TaskUserViewDto> listTaskUser(Pageable pageable);
 
     @Query(nativeQuery = true,
-            value = "select tu.task_id as taskId, a.taskName as taskName, tu.assign_by_id as assignById, u.username as assignByName from task_user tu " +
+            value = "select tu.task_id as taskId, a.taskName as taskName, " +
+                            "tu.assign_by_id as assignById, u.username as assignByName from task_user tu " +
                             " inner join assignment a on tu.task_id = a.id " +
                             " inner join user u on tu.assign_by_id = u.id " +
                             " where tu.task_id = ?1")
