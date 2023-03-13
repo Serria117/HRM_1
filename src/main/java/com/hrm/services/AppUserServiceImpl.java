@@ -163,9 +163,10 @@ public class AppUserServiceImpl implements AppUserService
     }
 
     @Override
-    public TokenResponse signIn(SignInDto signInDto, HttpServletRequest req)
+    public CompletableFuture<TokenResponse> signIn(SignInDto signInDto, HttpServletRequest req)
     {
         try {
+            var tokenResponse = new TokenResponse();
             var auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             signInDto.getUsername(),
@@ -175,29 +176,32 @@ public class AppUserServiceImpl implements AppUserService
                 var token = JWTProvider.createToken(userDetails);
                 var refreshToken = createRefreshToken();
                 updateRefreshToken(signInDto.getUsername(), refreshToken);
-                return new TokenResponse()
-                               .setLoginIP(req.getRemoteAddr())
-                               .setUsername(signInDto.getUsername())
-                               .setUserId(userDetails.getUserId())
-                               .setRoles(userDetails.getRoles().stream()
-                                                    .map(SimpleGrantedAuthority::getAuthority).toList())
-                               .setAuthorities(userDetails.getAuthorities().stream()
-                                                          .map(GrantedAuthority::getAuthority)
-                                                          .filter(authority -> !authority.contains("ROLE_")).toList())
-                               .setAccessToken(token)
-                               .setRefreshToken(refreshToken.getToken())
-                               .setExpiration(JWTProvider.getExpiration(token))
-                               .setCode("200")
-                               .setMessage("Successfully logged in");
+                tokenResponse.setLoginIP(req.getRemoteAddr())
+                             .setUsername(signInDto.getUsername())
+                             .setUserId(userDetails.getUserId())
+                             .setRoles(userDetails.getRoles().stream()
+                                                  .map(SimpleGrantedAuthority::getAuthority).toList())
+                             .setAuthorities(userDetails.getAuthorities().stream()
+                                                        .map(GrantedAuthority::getAuthority)
+                                                        .filter(authority -> !authority.contains("ROLE_")).toList())
+                             .setAccessToken(token)
+                             .setRefreshToken(refreshToken.getToken())
+                             .setExpiration(JWTProvider.getExpiration(token))
+                             .setCode("200")
+                             .setMessage("Successfully logged in");
+            } else {
+                tokenResponse.setMessage("Bad credential")
+                             .setSucceed(false)
+                             .setCode("401");
             }
-            return new TokenResponse().setMessage("Bad credential")
-                                      .setSucceed(false)
-                                      .setCode("401");
+            return CompletableFuture.completedFuture(tokenResponse);
         }
         catch ( Exception e ) {
-            return new TokenResponse().setMessage(e.getMessage())
-                                      .setSucceed(false)
-                                      .setCode("401");
+            log.error(e.getMessage());
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(new TokenResponse().setSucceed(false)
+                                                                        .setCode("500")
+                                                                        .setMessage("Internal server error"));
         }
     }
 
@@ -299,7 +303,7 @@ public class AppUserServiceImpl implements AppUserService
 
     public UserDto getUser(UUID id) throws Exception
     {
-        var user = userRepository.findById(id).map(this::convertUserToDto).orElseThrow(() -> new Exception("User not found"));
-        return user;
+        return userRepository.findById(id).map(this::convertUserToDto)
+                             .orElseThrow(() -> new Exception("User not found"));
     }
 }

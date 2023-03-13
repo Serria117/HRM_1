@@ -1,6 +1,7 @@
 package com.hrm.services;
 
 import com.hrm.dto.department.DepartmentDto;
+import com.hrm.entities.AppUser;
 import com.hrm.entities.Department;
 import com.hrm.payload.BaseResponse;
 import com.hrm.payload.DepartmentRequest;
@@ -12,11 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Service @Slf4j
 @RequiredArgsConstructor
@@ -26,7 +29,8 @@ public class DepartmentServiceImpl
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
 
-    public BaseResponse getDepartmentList(Integer page, Integer size)
+    @Async
+    public CompletableFuture<BaseResponse> getDepartmentList(Integer page, Integer size)
     {
         var departmentList = departmentRepository.finAllNonDeleted(PageRequest.of(page, size));
         var departmentDto = departmentList.map(department -> new DepartmentDto()
@@ -34,11 +38,13 @@ public class DepartmentServiceImpl
                                                                      .setDepartmentName(department.getDepartmentName())
                                                                      .setDepartmentCode(department.getDepartmentCode())
         );
-        return BaseResponse.success(departmentDto);
+        return CompletableFuture.completedFuture(BaseResponse.success(departmentDto));
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse createDepartment(DepartmentRequest dpmRequest, Authentication authentication)
+    @Async
+    public CompletableFuture<BaseResponse> createDepartment(DepartmentRequest dpmRequest,
+                                                            Authentication authentication)
     {
         try {
             /*var objRequest = new DepartmentRequest()
@@ -50,47 +56,46 @@ public class DepartmentServiceImpl
                 throw new RuntimeException("Department name already exist!");
             }
 
-            var objData = new Department()
-                                  .setDepartmentName(dpmRequest.getDepartmentName())
-                                  .setDepartmentCode(dpmRequest.getDepartmentCode());
-            objData.setCreation(authentication);
+            var newDepartment = new Department()
+                                        .setDepartmentName(dpmRequest.getDepartmentName())
+                                        .setDepartmentCode(dpmRequest.getDepartmentCode());
+            newDepartment.setCreation(authentication);
 
-            var dpmCreate = departmentRepository.save(objData);
+            var dpmCreate = departmentRepository.save(newDepartment);
 
             LOGGER.info("Create department success!");
 
-            return BaseResponse.success(new DepartmentViewDto(dpmCreate));
+            return CompletableFuture.completedFuture(BaseResponse.success(new DepartmentViewDto(dpmCreate)));
         }
         catch ( Exception ex ) {
             LOGGER.error("Create department fail", ex);
-            return BaseResponse.error(ex.getMessage());
+            return CompletableFuture.completedFuture(BaseResponse.error(ex.getMessage()));
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResponse updateDepartment(DepartmentRequest dpmRequest, Authentication authentication)
+    @Transactional(rollbackFor = Exception.class) @Async
+    public CompletableFuture<BaseResponse> updateDepartment(DepartmentRequest dpmRequest, Authentication authentication)
     {
         try {
-            var dpmExist = departmentRepository.findById(dpmRequest.getId()).orElse(null);
-            var userExist = userRepository.findById(dpmRequest.getUserId()).orElse(null);
-            if ( dpmExist == null ) {
+            var foundDep = departmentRepository.findById(dpmRequest.getId()).orElse(null);
+            if ( foundDep == null ) {
                 throw new RuntimeException("Department not found by id: " + dpmRequest.getId());
             }
-            if ( userExist == null ) {
-                throw new RuntimeException("User not found by id: " + dpmRequest.getUserId());
-            }
-            dpmExist.setDepartmentName(dpmRequest.getDepartmentName());
-            dpmExist.setDepartmentCode(dpmRequest.getDepartmentCode());
-            dpmExist.setManagementUser(userExist);
-            dpmExist.setModification(authentication);
+            AppUser mngUser = null;
+            if ( dpmRequest.getUserId() != null ) {mngUser = userRepository.findById(dpmRequest.getUserId()).orElse(null);}
+
+            foundDep.setDepartmentName(dpmRequest.getDepartmentName());
+            foundDep.setDepartmentCode(dpmRequest.getDepartmentCode());
+            foundDep.setManagementUser(mngUser);
+            foundDep.setModification(authentication);
 
             LOGGER.info("Update department success!");
 
-            return BaseResponse.success(new DepartmentViewDto(dpmExist));
+            return CompletableFuture.completedFuture(BaseResponse.success(new DepartmentViewDto(foundDep)));
         }
         catch ( Exception ex ) {
             LOGGER.error("Update department fail!");
-            return BaseResponse.error(ex.getMessage());
+            return CompletableFuture.completedFuture(BaseResponse.error(ex.getMessage()));
         }
     }
 

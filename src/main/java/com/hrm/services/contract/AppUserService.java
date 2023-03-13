@@ -8,13 +8,14 @@ import com.hrm.payload.userdto.TokenResponse;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.concurrent.CompletableFuture;
 
 public interface AppUserService
 {
     @Transactional(rollbackFor = Exception.class)
     BaseResponse signUp(SignUpDto signUpDto);
 
-    TokenResponse signIn(SignInDto signInDto, HttpServletRequest req);
+    CompletableFuture<TokenResponse> signIn(SignInDto signInDto, HttpServletRequest req);
 
     RefreshToken createRefreshToken();
 

@@ -35,7 +35,10 @@ public class ExceptionController extends ResponseEntityExceptionHandler
         return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler({DuplicatedEntityException.class, IdNotFoundException.class, InvalidIdentityException.class})
+    @ExceptionHandler({
+            DuplicatedEntityException.class,
+            IdNotFoundException.class,
+            InvalidIdentityException.class})
     public ResponseEntity<?> handleCustomException(Exception ex, WebRequest web)
     {
         ex.printStackTrace();
@@ -47,7 +50,7 @@ public class ExceptionController extends ResponseEntityExceptionHandler
     {
         log.error(ex.getMessage());
         ex.printStackTrace();
-        return ResponseEntity.badRequest().body("The server has encountered an error. A report has been generate for the administrator.");
-
+        return ResponseEntity.badRequest().body("The server has encountered an error when processing your request. A report has been generated for " +
+                                                        "the administrator.");
     }
 }
