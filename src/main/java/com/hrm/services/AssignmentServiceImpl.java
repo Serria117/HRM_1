@@ -15,11 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.Iterator;
-import java.util.List;
 
 @Service @Slf4j
 @RequiredArgsConstructor
-public class AssignmentServiceIpm {
+public class AssignmentServiceImpl {
     private final AssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
 

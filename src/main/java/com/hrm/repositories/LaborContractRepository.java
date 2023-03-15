@@ -1,6 +1,9 @@
 package com.hrm.repositories;
 
+import com.hrm.dto.laborContract.laborContractProjection.LaborContractViewDetailDto;
 import com.hrm.entities.LaborContract;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,8 +14,8 @@ public interface LaborContractRepository extends JpaRepository<LaborContract, Lo
 {
     @Query(nativeQuery = true,
     value = "select * from labor_contract l " +
-                    "inner join user u on l.user_id = u.id" +
-                    "where u.id = ?1 and l.isActivated = ?2")
+                    " inner join user u on l.userId = u.id" +
+                    " where u.id = ?1 and l.isActivated = ?2")
     Optional<LaborContract> findByCurrentContract(UUID userId, Boolean isActivated);
 
     @Query(nativeQuery = true, value = "select l.id as lbId, u.username as lbUser, l.contractNumber as lbNumber, ct.typeName as lbTypeName," +

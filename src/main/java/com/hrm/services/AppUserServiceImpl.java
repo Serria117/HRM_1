@@ -163,7 +163,7 @@ public class AppUserServiceImpl implements AppUserService
     }
 
     @Override
-    public TokenResponse signIn(SignInDto signInDto)
+    public CompletableFuture<TokenResponse> signIn(SignInDto signInDto, HttpServletRequest req)
     {
         try {
             var auth = authenticationManager.authenticate(
@@ -175,22 +175,28 @@ public class AppUserServiceImpl implements AppUserService
                 var token = JWTProvider.createToken(userDetails);
                 var refreshToken = createRefreshToken();
                 updateRefreshToken(signInDto.getUsername(), refreshToken);
-                return new TokenResponse().setUsername(signInDto.getUsername())
-                                          .setUserId(userDetails.getUserId())
-                                          .setAccessToken(token)
-                                          .setRefreshToken(refreshToken.getToken())
-                                          .setExpiration(JWTProvider.getExpiration(token))
-                                          .setCode("200")
-                                          .setMessage("Successfully logged in");
+                return CompletableFuture.completedFuture(
+                        new TokenResponse().setUsername(signInDto.getUsername())
+                                .setUserId(userDetails.getUserId())
+                                .setAccessToken(token)
+                                .setRefreshToken(refreshToken.getToken())
+                                .setExpiration(JWTProvider.getExpiration(token))
+                                .setCode("200")
+                                .setMessage("Successfully logged in")
+                );
             }
-            return new TokenResponse().setMessage("Bad credential")
-                                      .setSucceed(false)
-                                      .setCode("401");
+            return CompletableFuture.completedFuture(
+                    new TokenResponse().setMessage("Bad credential")
+                            .setSucceed(false)
+                            .setCode("401")
+            );
         }
         catch ( Exception e ) {
-            return new TokenResponse().setMessage(e.getMessage())
-                                      .setSucceed(false)
-                                      .setCode("401");
+            return CompletableFuture.completedFuture(
+                    new TokenResponse().setMessage(e.getMessage())
+                            .setSucceed(false)
+                            .setCode("401")
+            );
         }
     }
 
@@ -294,5 +300,29 @@ public class AppUserServiceImpl implements AppUserService
     {
         return userRepository.findById(id).map(this::convertUserToDto)
                              .orElseThrow(() -> new Exception("User not found"));
+    }
+
+    @Transactional(rollbackFor = Exception.class) @Async
+    public CompletableFuture<BaseResponse> deletedUser(UUID userId, Authentication authentication){
+        try {
+            var userExist = userRepository.findById(userId).orElseThrow(() ->
+                    new RuntimeException("User invalid by id: " + userId));
+            userExist.setIsDeleted(true)
+                    .setModification(authentication);
+            var contractExistByUser = laborContractRepository.findByCurrentContract(userId, true);
+            contractExistByUser.ifPresent(ct -> {
+                ct.setIsActivated(false);
+                ct.setModification(authentication);
+            });
+            log.info("Delete user successfully!");
+            return CompletableFuture.completedFuture(
+                    BaseResponse.success("Delete user successfully!")
+            );
+        } catch (Exception ex){
+            log.error("Delete user fail: " + ex.getMessage());
+            return CompletableFuture.completedFuture(
+                    BaseResponse.error(ex.getMessage())
+            );
+        }
     }
 }
