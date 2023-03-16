@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Service @Slf4j @RequiredArgsConstructor
 public class LeaveServiceImpl {
@@ -28,6 +29,22 @@ public class LeaveServiceImpl {
             return BaseResponse.success(leave);
         } catch (Exception ex){
             log.error("Get list leave fail!");
+            return BaseResponse.error(ex.getMessage());
+        }
+    }
+
+    public BaseResponse getListLeaveByUser(UUID  userId, Integer page, Integer size){
+        try {
+            var listLeave = leaveRepository.getListLeaveByUser(userId, PageRequest.of(page, size));
+            var logMessage = listLeave.size() > 0
+                    ? "Get leaves by userId: " + userId + " successfully"
+                    : "Leave by userId: " + userId + " is empty!";
+            log.info(logMessage);
+            return listLeave.size() > 0
+                    ? BaseResponse.success(listLeave)
+                    : BaseResponse.success("Leave by userId: " + userId + " is empty!");
+        } catch (Exception ex){
+            log.error("Get leaves by userId: " + userId + " fail!" + ex.getMessage());
             return BaseResponse.error(ex.getMessage());
         }
     }

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -19,6 +20,16 @@ public class LeaveController {
     public ResponseEntity<?> getListLeave(@RequestParam(required = false, defaultValue = "0") Integer page,
                                                              @RequestParam(required = false, defaultValue = "100") Integer size) throws ExecutionException, InterruptedException {
         var res = leaveService.getListLeave(page, size);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
+    @GetMapping("get-leaves/{id}")
+    public ResponseEntity<?> getLeavesByUser(@PathVariable(name = "id") UUID userId,
+                                             @RequestParam(required = false, defaultValue = "0") Integer page,
+                                             @RequestParam(required = false, defaultValue = "100") Integer size){
+        var res = leaveService.getListLeaveByUser(userId, page, size);
         return res.getSucceed()
                 ? ResponseEntity.ok(res)
                 : ResponseEntity.badRequest().body(res);
