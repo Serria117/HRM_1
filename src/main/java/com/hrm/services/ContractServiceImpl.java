@@ -12,9 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.format.DateTimeFormatter;
 
 @Service @Slf4j
 @RequiredArgsConstructor
@@ -23,8 +26,17 @@ public class ContractServiceImpl
     private final static Logger LOGGER = LoggerFactory.getLogger(ContractServiceImpl.class);
     private final LaborContractRepository laborContractRepository;
     private final ContractTypeRepository contractTypeRepository;
-    private final AppUserServiceImpl userService;
     private final UserRepository userRepository;
+    private final DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    public BaseResponse getAllContract(Integer page, Integer size){
+        try {
+            var contractList = laborContractRepository.getAllContractNonDeleted(PageRequest.of(page, size));
+            return BaseResponse.success(contractList);
+        } catch (Exception ex){
+            return BaseResponse.error(ex.getMessage());
+        }
+    }
 
     @Transactional(rollbackFor = Exception.class)
     public BaseResponse createNewContract(LaborContractRequest lbContractRequest,
@@ -98,8 +110,8 @@ public class ContractServiceImpl
                                           .setContractTypeName(contractType.getTypeName())
                                           .setEmail(user.getEmail())
                                           .setPhone(user.getPhone())
-                                          .setStartDate(foundContract.getStartDate())
-                                          .setEndDate(foundContract.getEndDate());
+                                          .setStartDate(foundContract.getStartDate().format(formatters))
+                                          .setEndDate(foundContract.getEndDate().format(formatters));
             return BaseResponse.success(contractDto);
         }
         catch ( Exception ex ) {
@@ -109,17 +121,19 @@ public class ContractServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse deleteContract(Long id)
+    public BaseResponse deleteContract(Long id, Authentication authentication)
     {
         try {
             var foundContract = laborContractRepository.findById(id)
                                         .orElseThrow(() -> new RuntimeException("Invalid contract Id"));
-            foundContract.setIsActivated(false);
-            foundContract.setIsDeleted(true);
-
+            foundContract.setIsActivated(false)
+                    .setIsDeleted(true)
+                    .setModification(authentication);
+            log.info("Deleted contract successfully!");
             return BaseResponse.success(foundContract);
         }
         catch ( Exception e ) {
+            log.error("Deleted contract fail: " + e.getMessage());
             return BaseResponse.error(e.getMessage());
         }
     }

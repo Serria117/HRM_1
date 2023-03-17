@@ -19,7 +19,7 @@ import java.util.Iterator;
 
 @Service @Slf4j
 @RequiredArgsConstructor
-public class AssignmentServiceIpm {
+public class AssignmentServiceImpl {
     private final AssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
 

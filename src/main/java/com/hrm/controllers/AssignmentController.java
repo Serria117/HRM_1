@@ -1,7 +1,7 @@
 package com.hrm.controllers;
 
 import com.hrm.payload.AssignmentRequest;
-import com.hrm.services.AssignmentServiceIpm;
+import com.hrm.services.AssignmentServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController @RequiredArgsConstructor
 @RequestMapping("api/assignment")
 public class AssignmentController {
-    private final AssignmentServiceIpm assignmentService;
+    private final AssignmentServiceImpl assignmentService;
 
     @PostMapping("/add-new")
     public ResponseEntity<?> createAssignment(@RequestBody AssignmentRequest asmRequest, Authentication authentication){

@@ -6,9 +6,13 @@ import com.hrm.services.UserServiceImpl;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("api/user")
@@ -34,5 +38,15 @@ public class UserController {
     public ResponseEntity<?> getUser(@PathVariable(name = "id") UUID id) throws Exception {
         var userRes = userService.getUser(id);
         return userRes != null ? ResponseEntity.ok(userRes) : ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/delete/{id}") @Async
+    public CompletableFuture<ResponseEntity<?>> deletedUser(@PathVariable(name = "id") UUID userId, Authentication authentication) throws ExecutionException, InterruptedException {
+        var res = userService.deletedUser(userId, authentication);
+        return CompletableFuture.completedFuture(
+                res.get().getSucceed()
+                        ? ResponseEntity.ok(res)
+                        : ResponseEntity.badRequest().body(res)
+        );
     }
 }
