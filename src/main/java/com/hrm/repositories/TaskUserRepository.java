@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TaskUserRepository extends JpaRepository<Assignment, Long>
@@ -31,6 +32,22 @@ public interface TaskUserRepository extends JpaRepository<Assignment, Long>
                             " inner join user u on tu.assign_by_id = u.id " +
                             " where tu.task_id = ?1")
     List<TaskUserViewDto> userListOfAssignment(Long asmId, Pageable pageable);
+
+    @Query(nativeQuery = true, value = "select tu.task_id as taskId, a.taskName as taskName,\n" +
+            "tu.assign_by_id as assignById, u.username as assignByName\n" +
+            "from task_user tu\n" +
+            "inner join assignment a on tu.task_id = a.id\n" +
+            "inner join user u on tu.assign_by_id = u.id\n" +
+            "where tu.task_id = ?1")
+    List<TaskUserViewDto> getListTaskUserById(Long taskId);
+
+    @Query(nativeQuery = true, value = "select tu.task_id as taskId, a.taskName as taskName,\n" +
+            "tu.assign_by_id as assignById, u.username as assignByName\n" +
+            "from task_user tu\n" +
+            "inner join assignment a on tu.task_id = a.id\n" +
+            "inner join user u on tu.assign_by_id = u.id\n" +
+            "where tu.task_id = ?1")
+    Optional<TaskUserViewDto> getTaskUserById(Long taskId);
 
     @Modifying
     @Query(nativeQuery = true,

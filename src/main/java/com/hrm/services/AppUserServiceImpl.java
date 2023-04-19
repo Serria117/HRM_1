@@ -1,8 +1,10 @@
 package com.hrm.services;
 
-import com.hrm.dto.UserDto;
+import com.hrm.dto.user.UserDto;
+import com.hrm.entities.AppRole;
 import com.hrm.entities.AppUser;
 import com.hrm.payload.BaseResponse;
+import com.hrm.payload.UserRequest;
 import com.hrm.payload.userdto.*;
 import com.hrm.repositories.ContractTypeRepository;
 import com.hrm.repositories.LaborContractRepository;
@@ -16,12 +18,11 @@ import com.hrm.utils.MapperUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,9 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Service @RequiredArgsConstructor @Slf4j
@@ -276,16 +275,22 @@ public class AppUserServiceImpl implements AppUserService
 
     public UserDto convertUserToDto(AppUser appUser)
     {
-        UserDto userDto = new UserDto();
-        userDto.setId(appUser.getId());
-        userDto.setUsername(appUser.getUsername());
-        userDto.setFullName(appUser.getFullName());
-        userDto.setEmail(appUser.getEmail());
-        userDto.setPhone(appUser.getPhone());
-        userDto.setAddress(appUser.getAddress());
-        userDto.setBankAccount(appUser.getBankAccount());
-        userDto.setBankFullName(appUser.getBankFullName());
-        userDto.setBankShortName(appUser.getBankShortName());
+        var userDto = new UserDto()
+        .setId(appUser.getId())
+        .setUsername(appUser.getUsername())
+        .setFullName(appUser.getFullName())
+        .setEmail(appUser.getEmail())
+        .setPhone(appUser.getPhone())
+        .setAddress(appUser.getAddress())
+        .setBankAccount(appUser.getBankAccount())
+        .setBankFullName(appUser.getBankFullName())
+        .setBankShortName(appUser.getBankShortName());
+        for(AppRole role : appUser.getRoles()){
+            userDto.setRole(role.getRoleName());
+        }
+        var isActivated = appUser.getIsActivated()
+                ? "Hoạt động" : "Không hoạt động";
+        userDto.setIsActivated(isActivated);
         return userDto;
     }
 
@@ -294,6 +299,17 @@ public class AppUserServiceImpl implements AppUserService
         var listUsers = userRepository.findAllNonDeleted(PageRequest.of(page, size));
         var res = listUsers.map(this::convertUserToDto);
         return BaseResponse.success(res);
+    }
+
+    public BaseResponse getAllEpl(){
+        List<Long> rolesId = Arrays.asList(1L ,4L);
+        var listEpl = userRepository.getListEpl();
+        var rolesAdmin = roleRepository.findAllById(rolesId);
+//        var listEplDto = listEpl.stream().filter(s -> {
+//                    return s.getRoles().equals(new HashSet<>(rolesAdmin));
+//        });
+        var listEplDto = listEpl.stream().map(this::convertUserToDto);
+        return BaseResponse.success(listEplDto);
     }
 
     public UserDto getUser(UUID id) throws Exception
@@ -325,4 +341,69 @@ public class AppUserServiceImpl implements AppUserService
             );
         }
     }
+
+    public BaseResponse getAllUserDepartment(Integer page, Integer size){
+        try {
+            var listObj = userRepository.getAllUserDepartmentNodeleted(PageRequest.of(page, size, Sort.by("id").descending()));
+            var logMessage = listObj != null
+                    ? "Get list user department oke"
+                    : "List user department is empty";
+            log.info(logMessage);
+            return listObj != null
+                    ? BaseResponse.success(listObj).setMessage("Get list user department oke")
+                    : BaseResponse.success("List user department is empty");
+        } catch (Exception ex){
+            log.error("Get list user department fail! " + ex.getMessage());
+            return  BaseResponse.error(ex.getMessage());
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse createUser(UserRequest request, Authentication authentication){
+        try {
+//            var userExist = userRepository.findById(request.getId())
+//                    .orElseThrow(() -> new RuntimeException("User is already exist!"));
+            var userNameExist = userRepository.findByUsername(request.getUserName());
+            if (userNameExist != null) throw new RuntimeException("Username is already exist!");
+            List<Long> ids = Arrays.asList(2L, 3L, 4L);
+            var roles = roleRepository.findAllById(ids);
+
+//            List<Long> ids2 = Arrays.asList(request.getRolesId().get(0)) ;
+            var roles2 = roleRepository.findAllById(request.getRolesId());
+//                    .orElseThrow(() -> new RuntimeException("Role invalid by id" + request.getRoleId()));
+//            Set<AppRole> linkedHashSet = new LinkedHashSet<>();
+            var userCreate = new AppUser()
+                    .setUsername(request.getUserName())
+                    .setFullName(request.getFullName())
+                    .setPassword(passwordEncoder.encode(request.getPassword()))
+                    .setEmail(request.getEmail())
+                    .setPhone(request.getPhone())
+                    .setAddress(request.getAddress())
+                    .setBankAccount(request.getBankAccount())
+                    .setBankFullName(request.getBankFullName())
+                    .setBankShortName(request.getBankShortName())
+                    .setRoles(new HashSet<>(roles2));
+            userCreate.setCreation(authentication);
+            var userSave = userRepository.save(userCreate);
+            log.info("Create user successfully!");
+            return BaseResponse.success(userSave).setMessage("Create user successfully!");
+        } catch (Exception ex){
+            log.error("Create user fail" + ex.getMessage());
+            return BaseResponse.error(ex.getMessage());
+        }
+    }
+
+//    public BaseResponse updateUser(UserRequest request, Authentication authentication) {
+//        try {
+//            var userExist = userRepository.findById(request.getId())
+//                    .orElseThrow(() -> new RuntimeException("User invalid by id: "+request.getId()));
+//            userExist.setUsername(request.getUserName()|)
+//                    .setFullName(request.getFullName())
+//                    .setPassword(request.getPassword())
+//                    .setEmail(request.getEmail())
+//
+//        } catch (Exception ex) {
+//
+//        }
+//    }
 }

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 @Service @Slf4j
 @RequiredArgsConstructor
@@ -25,6 +26,24 @@ public class AssignmentServiceImpl {
     public BaseResponse getAllAssignment(Integer page, Integer size){
         var agmList = assignmentRepository.getAllAssignmentNonDeleted(PageRequest.of(page, size));
         return BaseResponse.success(agmList);
+    }
+
+    public BaseResponse getAssignmentById(Long asmId){
+        try {
+            var asmExist = assignmentRepository.findById(asmId)
+            .orElseThrow(() -> new RuntimeException("Assignment invalid by id: " + asmId));
+//                throw new RuntimeException("Assignment invalid by id: " + asmId);
+            var logMessage = asmExist != null
+                    ? "Get asm by id success"
+                    : "Asm invalid by id " + asmId;
+            log.info(logMessage);
+            return asmExist == null
+                    ? BaseResponse.success("Assignment invalid by id: " + asmId)
+                    : BaseResponse.success(asmExist).setMessage("Get asm by id success!");
+        } catch (Exception e) {
+            log.error("Get asm by id fail: " +e );
+            return BaseResponse.error("Get asm by id fail: " + e);
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -46,7 +65,7 @@ public class AssignmentServiceImpl {
             var asmSave = assignmentRepository.save(asmCreate);
 
             var asmRes = new AssignmentDto()
-                    .setId(asmCreate.getId())
+                    .setAsmId(asmCreate.getId())
                     .setTaskName(asmCreate.getTaskName())
                     .setTaskDescription(asmCreate.getTaskDescription())
                     .setAssignByUserName(userAssign.getUsername());
@@ -60,13 +79,20 @@ public class AssignmentServiceImpl {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse updateAssignment(AssignmentRequest asmRequest, Authentication authentication){
+    public BaseResponse updateAssignment(Long asmId, AssignmentRequest asmRequest, Authentication authentication){
         try {
-            var asmExist = assignmentRepository.findById(asmRequest.getId())
-                    .orElseThrow(() -> new RuntimeException("Assignment invalid by id: " + asmRequest.getId()));
+             var asmExist = assignmentRepository.findById(asmId)
+                    .orElseThrow(() -> new RuntimeException("Assignment invalid by id: " + asmId));
 
+//            if (!assignmentRepository.findAssignmentByTaskName(asmRequest.getTaskName()).isEmpty())
+//                throw new RuntimeException("Task name already exist by: " + asmRequest.getTaskName());
+            var findTaskNameAsm = assignmentRepository.findAssignmentByTaskName(asmRequest.getTaskName());
+            if (!findTaskNameAsm.isEmpty()  && findTaskNameAsm.get(0).getId() !=(asmExist.getId()))
+                throw new RuntimeException("Task name already exist by: " + asmRequest.getTaskName());
+//            if (asmExist.getTaskName().equals(asmRequest.getTaskName()) && !asmExist.getId().equals(asmRequest.getId()))
+//                throw new RuntimeException("Task name already exist by: " + asmRequest.getTaskName());
             asmExist.setTaskName(asmRequest.getTaskName())
-                    .setTaskDescription(asmExist.getTaskDescription())
+                    .setTaskDescription(asmRequest.getDescription())
                     .setModification(authentication);
 
             var asmSave = assignmentRepository.save(asmExist);
@@ -110,6 +136,38 @@ public class AssignmentServiceImpl {
         } catch (Exception ex){
             log.error("Deleted all assignment fail!");
             return BaseResponse.error(ex.getMessage());
+        }
+    }
+
+    public BaseResponse getListUserInAsm(Long asmId){
+        try {
+            var lstUser = assignmentRepository.getListUserInAsm(asmId);
+            var logMessage = lstUser.size() > 0
+                    ? "Get list user in asm success"
+                    : "List user in asm by asmId: " + asmId + "is empty";
+            log.info(logMessage);
+            return lstUser.size() > 0
+                    ? BaseResponse.success(lstUser).setMessage("Get list user in asm success")
+                    : BaseResponse.success("List user in asm by asmId: " + asmId + "is empty");
+        } catch (Exception e){
+            log.error("Get list user in asm by asmId" + asmId + "fail: ...", e);
+            return BaseResponse.error("Get list user in asm by asmId" + asmId + "fail: ..." + e);
+        }
+    }
+
+    public BaseResponse getListUserInAsm2(Long asmId){
+        try {
+            var lstUser = assignmentRepository.getListUserInAsm2(asmId);
+            var logMessage = lstUser.size() > 0
+                    ? "Get list user in asm success"
+                    : "List user in asm by asmId: " + asmId + "is empty";
+            log.info(logMessage);
+            return lstUser.size() > 0
+                    ? BaseResponse.success(lstUser).setMessage("Get list user in asm success")
+                    : BaseResponse.success("List user in asm by asmId: " + asmId + "is empty");
+        } catch (Exception e){
+            log.error("Get list user in asm by asmId" + asmId + "fail: ...", e);
+            return BaseResponse.error("Get list user in asm by asmId" + asmId + "fail: ..." + e);
         }
     }
 

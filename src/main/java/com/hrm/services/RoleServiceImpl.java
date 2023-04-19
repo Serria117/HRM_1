@@ -7,6 +7,7 @@ import com.hrm.repositories.AuthorityRepository;
 import com.hrm.repositories.RoleRepository;
 import com.hrm.services.contract.RoleService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 
-@Service @RequiredArgsConstructor
+@Service @RequiredArgsConstructor @Slf4j
 @Transactional(rollbackFor = SQLException.class, timeout = 3000)
 public class RoleServiceImpl implements RoleService
 {
@@ -62,5 +63,21 @@ public class RoleServiceImpl implements RoleService
             return CompletableFuture.completedFuture(BaseResponse.success(role.getRoleName() + " updated"));
         }
         return CompletableFuture.completedFuture(BaseResponse.error("Can not assign authority to role"));
+    }
+
+    public BaseResponse getAllRole(){
+        try {
+            var listObj = roleRepository.findAll();
+            var logMessage = listObj.size() > 0
+                    ? "Get list role successfully!"
+                    : "List role is empty!";
+            log.info(logMessage);
+            return listObj.size() > 0
+                    ? BaseResponse.success(listObj).setMessage("Get list role successfully!")
+                    : BaseResponse.success("List role is empty!");
+        } catch (Exception ex){
+            log.error("Get list role fail " + ex.getMessage());
+            return BaseResponse.success(ex.getMessage());
+        }
     }
 }

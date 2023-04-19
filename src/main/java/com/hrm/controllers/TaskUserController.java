@@ -23,6 +23,22 @@ public class TaskUserController {
                 : ResponseEntity.badRequest().body(listUserTask);
     }
 
+    @GetMapping("/getListTaskUserByTaskId/{taskId}")
+    public ResponseEntity<?> getListTaskUserByTaskId(@PathVariable Long taskId){
+        var res = taskUserService.getListTUByTaskId(taskId);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
+    @GetMapping("/getTaskUserByTaskId/{taskId}")
+    public ResponseEntity<?> getTaskUserByTaskId(@PathVariable Long taskId){
+        var res = taskUserService.getTUByTaskId(taskId);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
     @GetMapping("/get-user-assignment")
     public ResponseEntity<?> getUserListOfAssignment(@PathVariable Long asmId,
                                                   @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -35,6 +51,14 @@ public class TaskUserController {
 
     @PostMapping("/add-new")
     public ResponseEntity<?> createTaskUser(@RequestBody TaskUserRequest tuRequest){
+        var res = taskUserService.createTaskUser(tuRequest);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
+    @PostMapping("/update/{id}")
+    public ResponseEntity<?> createTaskUser(@RequestBody TaskUserRequest tuRequest, @PathVariable(name = "id") Long tuId){
         var res = taskUserService.createTaskUser(tuRequest);
         return res.getSucceed()
                 ? ResponseEntity.ok(res)

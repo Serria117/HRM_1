@@ -32,6 +32,41 @@ public class TaskUserServiceImpl {
         return BaseResponse.success(listUserOfAsm);
     }
 
+    public BaseResponse getListTUByTaskId(Long taskId){
+        try {
+            var lstTUExist = taskUserRepository.getListTaskUserById(taskId);
+            if (lstTUExist ==  null)
+                    throw new RuntimeException("TaskUser by taskId invalid");
+            var logMessage = lstTUExist.size() > 0
+                    ? "Get task user by taskId: " + taskId + " successfully"
+                    : "Task by taskId: " + taskId + " is empty!";
+            log.info(logMessage);
+            return lstTUExist.size() > 0
+                    ? BaseResponse.success(lstTUExist)
+                    : BaseResponse.success("task user by taskId: " + taskId + " is empty!");
+        } catch (Exception e){
+            log.info("Get task user by taskId fail: " + e);
+            return BaseResponse.error("Get task user by taskId fail: " + e);
+        }
+    }
+
+    public BaseResponse getTUByTaskId(Long taskId){
+        try {
+            var tuExist = taskUserRepository.getTaskUserById(taskId)
+                    .orElseThrow(() -> new RuntimeException("task user invalid by taskID: " + taskId));
+            var logMessage = tuExist != null
+                    ? "get task user by taskId success!"
+                    : "task user by taskID " + taskId +" is empty";
+            log.info(logMessage);
+            return tuExist != null
+                    ? BaseResponse.success(tuExist).setMessage("get task user by taskId success!")
+                    : BaseResponse.success("task user by taskID " + taskId +" is empty");
+        } catch (Exception e){
+            log.error("get task user by taskId fail: " + e);
+            return BaseResponse.error("get task user by taskId fail: " + e);
+        }
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public BaseResponse createTaskUser(TaskUserRequest tuRequest){
         try {
@@ -51,5 +86,24 @@ public class TaskUserServiceImpl {
         }
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse updateTaskUser(TaskUserRequest tuRequest){
+        try {
+            var taskUserExist = taskUserRepository.findCurrentUserOfTask(tuRequest.getTask_id(), tuRequest.getAssign_by_id());
+            var asmExist = assignmentRepository.findById(tuRequest.getTask_id())
+                    .orElseThrow(() -> new RuntimeException("Assignment invalid by id: " + tuRequest.getTask_id()));
+            var userExist = userRepository.findById(tuRequest.getAssign_by_id())
+                    .orElseThrow(() -> new RuntimeException("User invalid by id: "+ tuRequest.getAssign_by_id()));
+            if (taskUserExist.size() > 0)
+                throw new RuntimeException("User already exist at work");
+            taskUserRepository.createUserOfTask(tuRequest.getTask_id(), tuRequest.getAssign_by_id());
+            log.info("Create task user successfully!");
+            return BaseResponse.success("Create task user successfully!");
+        } catch (Exception ex){
+            log.error("Create task user fail!");
+            return BaseResponse.error(ex.getMessage());
+        }
+    }
 
+//    public BaseResponse addUserOfTask()
 }

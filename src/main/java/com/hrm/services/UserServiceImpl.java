@@ -1,6 +1,6 @@
 package com.hrm.services;
 
-import com.hrm.dto.UserDto;
+import com.hrm.dto.user.UserDto;
 import com.hrm.entities.AppUser;
 import com.hrm.repositories.UserRepository;
 import lombok.extern.slf4j.Slf4j;
