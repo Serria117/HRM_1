@@ -1,5 +1,6 @@
 package com.hrm.services;
 
+import com.hrm.customExpeption.IdNotFoundException;
 import com.hrm.dto.assignment.AssignmentDto;
 import com.hrm.entities.Assignment;
 import com.hrm.payload.AssignmentRequest;
@@ -108,14 +109,12 @@ public class AssignmentServiceImpl {
     public BaseResponse deletedAssignment(Long id, Authentication authentication){
         try {
             var asmExist = assignmentRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Assignment invalid by id: "+ id));
+                    .orElseThrow(() -> new IdNotFoundException("Assignment invalid by id: "+ id));
             asmExist.setIsDeleted(true);
             asmExist.setModification(authentication);
-
-            var asmSave = assignmentRepository.save(asmExist);
             log.info("Deleted assignment successfully!");
 
-            return BaseResponse.success(asmSave);
+            return BaseResponse.success(asmExist);
         } catch (Exception ex){
             log.error("Deleted assignment fail!", ex);
             return BaseResponse.error(ex.getMessage());
