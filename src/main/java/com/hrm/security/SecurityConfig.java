@@ -36,7 +36,8 @@ public class SecurityConfig
             "http://localhost:8081",
             "http://localhost:3000",
             "http://localhost:4200",
-            "http://localhost:5000"
+            "http://localhost:5000",
+            "https://tunganh24.github.io/"
     };
     private final String[] ALLOWED_METHODS = {"POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"};
     private final String[] ALLOWED_HEADERS = {"Authorization", "Cache-Control", "Content-Type", "Access-Control-Allow-Origin"};

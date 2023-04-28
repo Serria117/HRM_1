@@ -8,7 +8,9 @@ import java.io.Serializable;
 @Data
 @Accessors(chain = true)
 public class LeaveDto {
+    private Long id;
     private String eplName;
     private String duration;
     private String dateApply;
+    private Boolean isActivated;
 }

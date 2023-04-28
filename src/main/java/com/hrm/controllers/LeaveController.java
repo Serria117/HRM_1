@@ -66,4 +66,36 @@ public class LeaveController {
                 ? ResponseEntity.ok(res)
                 : ResponseEntity.badRequest().body(res);
     }
+
+    @GetMapping("list-leave-inactive")
+    public ResponseEntity<?> getListLeaveInActiveNonDeleted(){
+        var res = leaveService.getListLeaveInActiveNoneDeleted();
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
+    @PostMapping("approved/{leaveId}")
+    public ResponseEntity<?> approvedLeave(@PathVariable Long leaveId, Authentication authentication){
+        var res = leaveService.approvedLeave(leaveId, authentication);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
+    @GetMapping("list-leave-user-none-approve/{userId}")
+    public ResponseEntity<?> getListLeaveUserNoneApprove(@PathVariable UUID userId){
+        var res = leaveService.listLeaveUserNoneApprove(userId);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
+    @GetMapping("list-leave-user-approve/{userId}")
+    public ResponseEntity<?> getListLeaveUserApproveNoneDeleted(@PathVariable UUID userId){
+        var res = leaveService.listLeaveUserApproveNoneDeleted(userId);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
 }

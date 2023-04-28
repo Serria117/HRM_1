@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -56,6 +57,12 @@ public class DepartmentServiceImpl
                 throw new RuntimeException("Department name already exist!");
             }
 
+            var lstDepartment = departmentRepository.findAll().stream()
+                    .filter(d -> d.getDepartmentCode().contains(dpmRequest.getDepartmentCode()))
+                    .toList();
+            if (lstDepartment.size() > 0)
+                throw new RuntimeException("Department code elready exist by dpmRquest: " + dpmRequest.getDepartmentCode());
+
             var newDepartment = new Department()
                                         .setDepartmentName(dpmRequest.getDepartmentName())
                                         .setDepartmentCode(dpmRequest.getDepartmentCode());
@@ -74,13 +81,23 @@ public class DepartmentServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class) @Async
-    public CompletableFuture<BaseResponse> updateDepartment(DepartmentRequest dpmRequest, Authentication authentication)
+    public CompletableFuture<BaseResponse> updateDepartment(Long dpmId, DepartmentRequest dpmRequest, Authentication authentication)
     {
         try {
-            var foundDep = departmentRepository.findById(dpmRequest.getId()).orElse(null);
+            var foundDep = departmentRepository.findById(dpmId).orElse(null);
             if ( foundDep == null ) {
-                throw new RuntimeException("Department not found by id: " + dpmRequest.getId());
+                throw new RuntimeException("Department not found by id: " + dpmId);
             }
+            var dpmNameExist = departmentRepository.findAll().stream()
+                    .filter(s -> s.getDepartmentName().contains(dpmRequest.getDepartmentName()) &&
+                            !Objects.equals(s.getId(), foundDep.getId()));
+
+            var dpmCodeExist = departmentRepository.findAll().stream()
+                    .filter(s -> s.getDepartmentCode().contains(dpmRequest.getDepartmentCode()) &&
+                            !Objects.equals(s.getId(), foundDep.getId()));
+
+            if (dpmNameExist.findAny().isPresent() || dpmCodeExist.findAny().isPresent())
+                throw new RuntimeException("Department name or department code already exist");
             AppUser mngUser = null;
             if ( dpmRequest.getUserId() != null ) {mngUser = userRepository.findById(dpmRequest.getUserId()).orElse(null);}
 
@@ -126,7 +143,7 @@ public class DepartmentServiceImpl
         }
     }
 
-    public BaseResponse deleteDepartment(Long dpmId)
+    public BaseResponse deleteDepartment(Long dpmId, Authentication authentication)
     {
         try {
             var dpmExist = departmentRepository.findById(dpmId).orElse(null);
@@ -134,7 +151,8 @@ public class DepartmentServiceImpl
                 throw new RuntimeException("Department not found by id: " + dpmId);
             }
             else {
-                dpmExist.setIsDeleted(true);
+                dpmExist.setIsDeleted(true)
+                        .setModification(authentication);
             }
             var deleteDepartment = departmentRepository.save(dpmExist);
             LOGGER.info("Delete department success!");
@@ -167,6 +185,24 @@ public class DepartmentServiceImpl
         catch ( Exception ex ) {
             LOGGER.error(ex.getMessage());
             return BaseResponse.error(ex.getMessage());
+        }
+    }
+
+    public BaseResponse getListUserDpm(Long dpmId){
+        try {
+            var dpmExist = departmentRepository.findById(dpmId)
+                    .orElseThrow(() -> new RuntimeException("Department invalid by dpmId: " + dpmId));
+            var lstUser = departmentRepository.getListUserDpm(dpmId);
+            var logMessage = lstUser.size() > 0
+                    ? "Get list user dpm success"
+                    : "List user is empty by dpmId: " + dpmId;
+            log.info(logMessage);
+            return lstUser.size() > 0
+                    ? BaseResponse.success(lstUser).setMessage("Get list user dpm success")
+                    : BaseResponse.success("List user is empty by dpmId: " + dpmId);
+        } catch (Exception e){
+            log.error("Get list user dpm fail: " + e);
+            return BaseResponse.error("Get list user dpm fail: " + e);
         }
     }
 }

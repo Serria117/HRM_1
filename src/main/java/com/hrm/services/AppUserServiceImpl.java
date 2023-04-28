@@ -275,6 +275,7 @@ public class AppUserServiceImpl implements AppUserService
 
     public UserDto convertUserToDto(AppUser appUser)
     {
+        List<String> lstRole = new ArrayList<>();
         var userDto = new UserDto()
         .setId(appUser.getId())
         .setUsername(appUser.getUsername())
@@ -286,8 +287,10 @@ public class AppUserServiceImpl implements AppUserService
         .setBankFullName(appUser.getBankFullName())
         .setBankShortName(appUser.getBankShortName());
         for(AppRole role : appUser.getRoles()){
-            userDto.setRole(role.getRoleName());
+            lstRole.add(role.getRoleName());
         }
+//        .setRole(appUser.getRoles().stream().map(AppRole::getRoleName).toList());
+        userDto.setRole(lstRole);
         var isActivated = appUser.getIsActivated()
                 ? "Hoạt động" : "Không hoạt động";
         userDto.setIsActivated(isActivated);

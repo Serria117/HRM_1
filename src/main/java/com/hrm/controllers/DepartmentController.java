@@ -29,14 +29,14 @@ public class DepartmentController {
     }
 
     @PostMapping("add-new") @Async
-    public CompletableFuture<BaseResponse> createNewDepartment(DepartmentRequest dpmRequest, Authentication authentication){
+    public CompletableFuture<BaseResponse> createNewDepartment(@RequestBody DepartmentRequest dpmRequest, Authentication authentication){
         return departmentService.createDepartment(dpmRequest, authentication);
     }
 
-    @PostMapping("update") @Async
-    public CompletableFuture<BaseResponse> updateDepartment(DepartmentRequest request, Authentication authentication)
+    @PostMapping("update/{dpmId}") @Async
+    public CompletableFuture<BaseResponse> updateDepartment(@PathVariable Long dpmId, @RequestBody DepartmentRequest request, Authentication authentication)
     {
-        return departmentService.updateDepartment(request, authentication);
+        return departmentService.updateDepartment(dpmId, request, authentication);
     }
 
     @PostMapping("change-mng-user")
@@ -49,5 +49,21 @@ public class DepartmentController {
     public ResponseEntity<?> departmentViewDetail(@PathVariable(name = "id") Long dpmId){
         var res = departmentService.viewDetailDepartment(dpmId);
         return res.getSucceed() ? ResponseEntity.ok(res) : ResponseEntity.badRequest().body(res);
+    }
+
+    @GetMapping("lstUser/{dpmId}")
+    public ResponseEntity<?> getListUserDpm(@PathVariable Long dpmId){
+        var res = departmentService.getListUserDpm(dpmId);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
+    }
+
+    @PostMapping("delete/{dpmId}")
+    public ResponseEntity<?> deletedDepartment(@PathVariable Long dpmId, Authentication authentication){
+        var res = departmentService.deleteDepartment(dpmId, authentication);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
     }
 }

@@ -8,7 +8,6 @@ import java.util.UUID;
 
 @Data @Accessors(chain = true)
 public class DepartmentRequest {
-    private Long id;
     private String departmentName;
     private String departmentCode;
     private UUID userId;

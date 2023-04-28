@@ -11,5 +11,5 @@ public class LeaveRequest {
     private Long leaveId;
     private UUID eplId;
     private Integer duration;
-    private LocalDate dateApply;
+    private String dateApply;
 }
