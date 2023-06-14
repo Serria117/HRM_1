@@ -53,7 +53,7 @@ public class AssignmentServiceImpl {
             var asmExist = assignmentRepository.findAssignmentByTaskName(asmRequest.getTaskName());
             /*if (asmExist.stream().findAny().isPresent())*/
             if (!asmExist.isEmpty()) {
-                throw new RuntimeException("Assignment task name is already exist");
+                throw new RuntimeException("Tên công việc ' " + asmRequest.getTaskName()+ " ' đã tồn tại!");
             }
 
             var userAssign = userRepository.findByUsername(authentication.getName());
@@ -89,7 +89,7 @@ public class AssignmentServiceImpl {
 //                throw new RuntimeException("Task name already exist by: " + asmRequest.getTaskName());
             var findTaskNameAsm = assignmentRepository.findAssignmentByTaskName(asmRequest.getTaskName());
             if (!findTaskNameAsm.isEmpty()  && findTaskNameAsm.get(0).getId() !=(asmExist.getId()))
-                throw new RuntimeException("Task name already exist by: " + asmRequest.getTaskName());
+                throw new RuntimeException("Tên công việc ' " + asmRequest.getTaskName()+ " ' đã tồn tại!");
 //            if (asmExist.getTaskName().equals(asmRequest.getTaskName()) && !asmExist.getId().equals(asmRequest.getId()))
 //                throw new RuntimeException("Task name already exist by: " + asmRequest.getTaskName());
             asmExist.setTaskName(asmRequest.getTaskName())

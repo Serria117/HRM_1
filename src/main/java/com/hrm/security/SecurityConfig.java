@@ -35,6 +35,7 @@ public class SecurityConfig
     private final String[] ALLOWED_ORIGINS = {
             "http://localhost:8081",
             "http://localhost:3000",
+            "http://localhost:3001",
             "http://localhost:4200",
             "http://localhost:5000",
             "https://tunganh24.github.io/"

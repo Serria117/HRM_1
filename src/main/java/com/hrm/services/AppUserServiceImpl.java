@@ -1,6 +1,7 @@
 package com.hrm.services;
 
 import com.hrm.dto.user.UserDto;
+import com.hrm.dtoConverted.DtoConvert;
 import com.hrm.entities.AppRole;
 import com.hrm.entities.AppUser;
 import com.hrm.payload.BaseResponse;
@@ -23,6 +24,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,7 @@ public class AppUserServiceImpl implements AppUserService
     private final ContractTypeRepository contractTypeRepository;
     private final EmailService emailService;
     private final MapperUtils mapperUtils;
+    private final DtoConvert dtoConvert;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -179,6 +182,7 @@ public class AppUserServiceImpl implements AppUserService
                                 .setUserId(userDetails.getUserId())
                                 .setAccessToken(token)
                                 .setRefreshToken(refreshToken.getToken())
+                                .setRoles(userDetails.getRoles())
                                 .setExpiration(JWTProvider.getExpiration(token))
                                 .setCode("200")
                                 .setMessage("Successfully logged in")
@@ -273,34 +277,11 @@ public class AppUserServiceImpl implements AppUserService
 //        emailService.sendFormattedEmail(message).get();
 //    }
 
-    public UserDto convertUserToDto(AppUser appUser)
-    {
-        List<String> lstRole = new ArrayList<>();
-        var userDto = new UserDto()
-        .setId(appUser.getId())
-        .setUsername(appUser.getUsername())
-        .setFullName(appUser.getFullName())
-        .setEmail(appUser.getEmail())
-        .setPhone(appUser.getPhone())
-        .setAddress(appUser.getAddress())
-        .setBankAccount(appUser.getBankAccount())
-        .setBankFullName(appUser.getBankFullName())
-        .setBankShortName(appUser.getBankShortName());
-        for(AppRole role : appUser.getRoles()){
-            lstRole.add(role.getRoleName());
-        }
-//        .setRole(appUser.getRoles().stream().map(AppRole::getRoleName).toList());
-        userDto.setRole(lstRole);
-        var isActivated = appUser.getIsActivated()
-                ? "Hoạt động" : "Không hoạt động";
-        userDto.setIsActivated(isActivated);
-        return userDto;
-    }
 
     public BaseResponse getAllUser(Integer page, Integer size)
     {
         var listUsers = userRepository.findAllNonDeleted(PageRequest.of(page, size));
-        var res = listUsers.map(this::convertUserToDto);
+        var res = listUsers.map(dtoConvert::convertUserToDto);
         return BaseResponse.success(res);
     }
 
@@ -311,13 +292,13 @@ public class AppUserServiceImpl implements AppUserService
 //        var listEplDto = listEpl.stream().filter(s -> {
 //                    return s.getRoles().equals(new HashSet<>(rolesAdmin));
 //        });
-        var listEplDto = listEpl.stream().map(this::convertUserToDto);
+        var listEplDto = listEpl.stream().map(dtoConvert::convertUserToDto);
         return BaseResponse.success(listEplDto);
     }
 
     public UserDto getUser(UUID id) throws Exception
     {
-        return userRepository.findById(id).map(this::convertUserToDto)
+        return userRepository.findById(id).map(dtoConvert::convertUserToDto)
                              .orElseThrow(() -> new Exception("User not found"));
     }
 

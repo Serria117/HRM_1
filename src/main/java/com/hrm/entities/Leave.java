@@ -18,4 +18,5 @@ public class Leave extends BaseEntity
     LocalDate dateApply;
     Integer duration; //0=full day, 1 = 0.5 day
     UUID registerEmployee;
+    String description;
 }

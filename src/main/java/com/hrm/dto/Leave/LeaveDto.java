@@ -12,5 +12,6 @@ public class LeaveDto {
     private String eplName;
     private String duration;
     private String dateApply;
+    private String description;
     private Boolean isActivated;
 }

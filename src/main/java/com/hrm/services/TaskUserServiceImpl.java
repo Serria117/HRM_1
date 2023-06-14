@@ -70,13 +70,15 @@ public class TaskUserServiceImpl {
     @Transactional(rollbackFor = Exception.class)
     public BaseResponse createTaskUser(TaskUserRequest tuRequest){
         try {
+            if (tuRequest.getAssign_by_id() == null)
+                throw new RuntimeException("fail");
             var taskUserExist = taskUserRepository.findCurrentUserOfTask(tuRequest.getTask_id(), tuRequest.getAssign_by_id());
             var asmExist = assignmentRepository.findById(tuRequest.getTask_id())
                     .orElseThrow(() -> new RuntimeException("Assignment invalid by id: " + tuRequest.getTask_id()));
             var userExist = userRepository.findById(tuRequest.getAssign_by_id())
                     .orElseThrow(() -> new RuntimeException("User invalid by id: "+ tuRequest.getAssign_by_id()));
             if (taskUserExist.size() > 0)
-                throw new RuntimeException("User already exist at work");
+                throw new RuntimeException("Người này đã ở trong công việc!");
             taskUserRepository.createUserOfTask(tuRequest.getTask_id(), tuRequest.getAssign_by_id());
             log.info("Create task user successfully!");
             return BaseResponse.success("Create task user successfully!");
@@ -95,7 +97,7 @@ public class TaskUserServiceImpl {
             var userExist = userRepository.findById(tuRequest.getAssign_by_id())
                     .orElseThrow(() -> new RuntimeException("User invalid by id: "+ tuRequest.getAssign_by_id()));
             if (taskUserExist.size() > 0)
-                throw new RuntimeException("User already exist at work");
+                throw new RuntimeException("Người này đã ở trong công việc!");
             taskUserRepository.createUserOfTask(tuRequest.getTask_id(), tuRequest.getAssign_by_id());
             log.info("Create task user successfully!");
             return BaseResponse.success("Create task user successfully!");

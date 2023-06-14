@@ -1,6 +1,7 @@
 package com.hrm.services;
 
 import com.hrm.dto.Leave.LeaveDto;
+import com.hrm.dtoConverted.DtoConvert;
 import com.hrm.entities.AppUser;
 import com.hrm.entities.Leave;
 import com.hrm.payload.BaseResponse;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class LeaveServiceImpl {
     private final LeaveRepository leaveRepository;
     private final UserRepository userRepository;
+    private final DtoConvert dtoConvert;
     private final DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public BaseResponse getListLeave(Integer page, Integer size){
@@ -61,7 +63,7 @@ public class LeaveServiceImpl {
 //                    .setDateApply(leave.getDateApply().format(formatters));
 //            var setDurationDto = leave.getDuration() == 0 ? "Cả ngày" : "Nửa ngày";
 //            leaveDto.setDuration(setDurationDto);
-            var leaveDto = this.convertLeaveToDto(leave);
+            var leaveDto = dtoConvert.convertLeaveToDto(leave);
             log.info("Get schedule successfully by id: "+ leaveId);
             return BaseResponse.success(leaveDto);
         } catch (Exception ex){
@@ -80,7 +82,8 @@ public class LeaveServiceImpl {
             var leave = new Leave()
                     .setRegisterEmployee(leaveRequest.getEplId())
                     .setDuration(leaveRequest.getDuration())
-                    .setDateApply(dateApplyReq);
+                    .setDateApply(dateApplyReq)
+                    .setDescription(leaveRequest.getDescription());
             leave.setIsActivated(false);
             leave.setCreation(authentication);
             var leaveCreate = leaveRepository.save(leave);
@@ -127,7 +130,7 @@ public class LeaveServiceImpl {
     public BaseResponse getListLeaveInActiveNoneDeleted(){
         try {
             var lstLeaveInActive = leaveRepository.findAll().stream()
-                    .filter(s -> !s.getIsActivated() && !s.getIsDeleted()).map(this::convertLeaveToDto).toList();
+                    .filter(s -> !s.getIsActivated() && !s.getIsDeleted()).map(dtoConvert::convertLeaveToDto).toList();
             var logMessage = lstLeaveInActive.size() > 0
                     ? "Get list leave inactive success!"
                     : "list leave inactive is empty";
@@ -148,7 +151,7 @@ public class LeaveServiceImpl {
             leaveExist.setIsActivated(true)
                     .setModification(authentication);
             leaveRepository.save(leaveExist);
-            var leaveDto = convertLeaveToDto(leaveExist);
+            var leaveDto = dtoConvert.convertLeaveToDto(leaveExist);
             var logMessage = "Approved leave success!";
             log.info(logMessage);
             return BaseResponse.success(leaveDto).setMessage("Approved leave success!");
@@ -163,7 +166,7 @@ public class LeaveServiceImpl {
             var userExist = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User invalid by userId: " + userId));
             var lstUserLeaveNoneApprove = leaveRepository.listLeaveUserNoneApprove2(userId);
-            var lstUserLeaveNoneApproveDto = lstUserLeaveNoneApprove.stream().map(this::convertLeaveToDto);
+            var lstUserLeaveNoneApproveDto = lstUserLeaveNoneApprove.stream().map(dtoConvert::convertLeaveToDto);
             var logMessage = lstUserLeaveNoneApprove.size() > 0
                     ? "Get list leave user none approve success!"
                     : "List leave user none approve is empty!";
@@ -182,7 +185,7 @@ public class LeaveServiceImpl {
             var userExist = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User invalid by userId: " + userId));
             var lstLeave = leaveRepository.listLeaveUserApproveNoneDeleted(userExist.getId());
-            var lstLeaveDto = lstLeave.stream().map(this::convertLeaveToDto);
+            var lstLeaveDto = lstLeave.stream().map(dtoConvert::convertLeaveToDto);
             var logMessage = lstLeave.size() > 0
                     ? "Get list leave user approve success!"
                     : "List leave user approve is empty!";
@@ -194,16 +197,5 @@ public class LeaveServiceImpl {
           log.error("Get list leave user approve fail: " + e);
           return BaseResponse.error("Get list leave user approve fail: " + e);
         }
-    }
-
-    public LeaveDto convertLeaveToDto(Leave leave){
-        var durationDto = leave.getDuration() == 0 ? "Cả ngày" : "Nửa ngày";
-//        var isActivatedDto = leave.getIsActivated() ? "Đồng ý" : "";
-        return new LeaveDto()
-                .setId(leave.getId())
-                .setEplName(userRepository.getReferenceById(leave.getRegisterEmployee()).getUsername())
-                .setDateApply(leave.getDateApply().format(formatters))
-                .setDuration(durationDto)
-                .setIsActivated(leave.getIsActivated());
     }
 }

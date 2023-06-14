@@ -43,8 +43,7 @@ public class DepartmentServiceImpl
     }
 
     @Transactional(rollbackFor = Exception.class)
-    @Async
-    public CompletableFuture<BaseResponse> createDepartment(DepartmentRequest dpmRequest,
+    public BaseResponse createDepartment(DepartmentRequest dpmRequest,
                                                             Authentication authentication)
     {
         try {
@@ -54,14 +53,14 @@ public class DepartmentServiceImpl
                     .setDepartmentCode(dpmRequest.getDepartmentCode());*/
 
             if ( departmentRepository.existsDepartmentByName(dpmRequest.getDepartmentName()) ) {
-                throw new RuntimeException("Department name already exist!");
+                throw new RuntimeException("Tên phòng "+dpmRequest.getDepartmentName()+" đã tồn tại!");
             }
 
             var lstDepartment = departmentRepository.findAll().stream()
                     .filter(d -> d.getDepartmentCode().contains(dpmRequest.getDepartmentCode()))
                     .toList();
             if (lstDepartment.size() > 0)
-                throw new RuntimeException("Department code elready exist by dpmRquest: " + dpmRequest.getDepartmentCode());
+                throw new RuntimeException("Mã phòng: " + dpmRequest.getDepartmentCode() + " đã có trên hệ thống!");
 
             var newDepartment = new Department()
                                         .setDepartmentName(dpmRequest.getDepartmentName())
@@ -72,16 +71,16 @@ public class DepartmentServiceImpl
 
             LOGGER.info("Create department success!");
 
-            return CompletableFuture.completedFuture(BaseResponse.success(new DepartmentViewDto(dpmCreate)));
+            return BaseResponse.success(new DepartmentViewDto(dpmCreate));
         }
         catch ( Exception ex ) {
-            LOGGER.error("Create department fail", ex);
-            return CompletableFuture.completedFuture(BaseResponse.error(ex.getMessage()));
+            LOGGER.error("Thêm mới thất bại", ex.getMessage());
+            return BaseResponse.error(ex.getMessage());
         }
     }
 
-    @Transactional(rollbackFor = Exception.class) @Async
-    public CompletableFuture<BaseResponse> updateDepartment(Long dpmId, DepartmentRequest dpmRequest, Authentication authentication)
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse updateDepartment(Long dpmId, DepartmentRequest dpmRequest, Authentication authentication)
     {
         try {
             var foundDep = departmentRepository.findById(dpmId).orElse(null);
@@ -97,7 +96,7 @@ public class DepartmentServiceImpl
                             !Objects.equals(s.getId(), foundDep.getId()));
 
             if (dpmNameExist.findAny().isPresent() || dpmCodeExist.findAny().isPresent())
-                throw new RuntimeException("Department name or department code already exist");
+                throw new RuntimeException("Tên phòng hoặc mã phòng đã tồn tại!");
             AppUser mngUser = null;
             if ( dpmRequest.getUserId() != null ) {mngUser = userRepository.findById(dpmRequest.getUserId()).orElse(null);}
 
@@ -108,11 +107,11 @@ public class DepartmentServiceImpl
 
             LOGGER.info("Update department success!");
 
-            return CompletableFuture.completedFuture(BaseResponse.success(new DepartmentViewDto(foundDep)));
+            return BaseResponse.success(new DepartmentViewDto(foundDep));
         }
         catch ( Exception ex ) {
             LOGGER.error("Update department fail!");
-            return CompletableFuture.completedFuture(BaseResponse.error(ex.getMessage()));
+            return BaseResponse.error(ex.getMessage());
         }
     }
 

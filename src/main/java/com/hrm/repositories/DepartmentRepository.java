@@ -34,4 +34,16 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
             " inner join user u on d.mng_user_id = u.id " +
             " where d.id = ?1")
     List<UserViewDto> getListUserDpm(Long dpmId);
+
+    @Query(nativeQuery = true, value = "select dpm.id as id," +
+            "       dpm.departmentName as departmentName," +
+            "       dpm.departmentCode as departmentCode," +
+            "       u.username as mngUser," +
+            "       count(dpm.mng_user_id) as numberEmployeeOfDepartment" +
+            "       from department as dpm" +
+            "       left join user as u on dpm.mng_user_id = u.id" +
+            "       where dpm.isActivated = true" +
+            "       and dpm.isDeleted = false" +
+            "       group by dpm.id asc")
+    List<DepartmentViewDetailDto> lstDepartmentViewDetail(Pageable pageable);
 }

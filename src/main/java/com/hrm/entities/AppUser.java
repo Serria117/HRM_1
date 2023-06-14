@@ -39,7 +39,7 @@ public class AppUser extends BaseEntity implements Serializable
     String bankAccount;
     @Size(min = 3, max = 100)
     String bankFullName;
-    @Size(min = 3, max = 10)
+    @Size(min = 3, max = 20)
     String bankShortName;
     Byte[] biometricData;
     String refreshToken;

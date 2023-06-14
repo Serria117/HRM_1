@@ -85,7 +85,7 @@ public class HrmApplication
                     roleForAdmin.add(roleAdmin);
                     var adminUser = (AppUser) new AppUser()
                                                       .setUsername("admin")
-                                                      .setPassword(passwordEncoder.encode("123456"))
+                                                      .setPassword(passwordEncoder.encode("Gnut020401@"))
                                                       .setRoles(roleForAdmin)
                                                       .setCreatedByUser("admin")
                                                       .setLastModifiedByUser("admin");

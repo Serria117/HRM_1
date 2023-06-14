@@ -12,4 +12,5 @@ public class LeaveRequest {
     private UUID eplId;
     private Integer duration;
     private String dateApply;
+    private String description;
 }

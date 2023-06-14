@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("api/department")
@@ -28,15 +29,20 @@ public class DepartmentController {
             return departmentService.getDepartmentList(page, size);
     }
 
-    @PostMapping("add-new") @Async
-    public CompletableFuture<BaseResponse> createNewDepartment(@RequestBody DepartmentRequest dpmRequest, Authentication authentication){
-        return departmentService.createDepartment(dpmRequest, authentication);
+    @PostMapping("add-new")
+    public ResponseEntity<?> createNewDepartment(@RequestBody DepartmentRequest dpmRequest, Authentication authentication){
+        var res = departmentService.createDepartment(dpmRequest, authentication);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(res);
     }
 
-    @PostMapping("update/{dpmId}") @Async
-    public CompletableFuture<BaseResponse> updateDepartment(@PathVariable Long dpmId, @RequestBody DepartmentRequest request, Authentication authentication)
-    {
-        return departmentService.updateDepartment(dpmId, request, authentication);
+    @PostMapping("update/{dpmId}")
+    public ResponseEntity<?> updateDepartment(@PathVariable Long dpmId, @RequestBody DepartmentRequest request, Authentication authentication) throws ExecutionException, InterruptedException {
+        var res = departmentService.updateDepartment(dpmId, request, authentication);
+        return res.getSucceed()
+                ? ResponseEntity.ok(res)
+                : ResponseEntity.badRequest().body(request);
     }
 
     @PostMapping("change-mng-user")

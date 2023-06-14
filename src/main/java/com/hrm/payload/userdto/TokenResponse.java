@@ -2,6 +2,7 @@ package com.hrm.payload.userdto;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collection;
 import java.util.Date;
@@ -15,7 +16,7 @@ public class TokenResponse
     String code;
     String message;
     String accessToken;
-    Collection<String> roles;
+    Collection<SimpleGrantedAuthority> roles;
     Collection<String> authorities;
     Date expiration;
     String refreshToken;
